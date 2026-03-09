@@ -83,7 +83,7 @@ class DataRequestTable extends Component
         $this->validate([
             'no' => 'required|integer|min:1',
             'section_code' => 'nullable|max:10',
-            'section_no_input' => 'nullable|integer|min:0',
+            'section_no_input' => 'nullable|string|max:20',
             'account_process' => 'nullable|max:255',
             'description' => 'nullable',
             'request_date' => 'nullable|date',
@@ -98,7 +98,7 @@ class DataRequestTable extends Component
             'kap_id' => $kap,
             'no' => $this->no,
             'section_code' => $this->section_code ?: null,
-            'section_no' => $this->section_no_input !== '' ? (int) $this->section_no_input : null,
+            'section_no' => $this->section_no_input !== '' ? $this->section_no_input : null,
             'account_process' => $this->account_process,
             'description' => $this->description,
             'request_date' => $this->request_date,
@@ -192,7 +192,11 @@ class DataRequestTable extends Component
     public function render()
     {
         $requests = $this->clientId
-            ? DataRequest::where('client_id', $this->clientId)->orderBy('no')->get()
+            ? DataRequest::where('client_id', $this->clientId)
+                ->orderBy('section_code')
+                ->orderBy('section_no')
+                ->orderBy('no')
+                ->get()
             : collect();
 
         $clients = [];

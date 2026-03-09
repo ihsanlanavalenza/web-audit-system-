@@ -41,8 +41,7 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>No</th>
-                        <th>Section</th>
+                        <th class="w-24">Section / No.</th>
                         <th>Account / Process</th>
                         <th>Description</th>
                         <th>Request Date</th>
@@ -59,27 +58,82 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($requests as $req)
-                    <tr wire:key="req-{{ $req->id }}">
-                        <td class="font-mono font-semibold text-slate-900">{{ $req->no }}</td>
-                        <td class="text-slate-600">{{ $req->section }}</td>
+                    @php
+                        // Pre-calculate rowspans for section_code, section, and account_process grouping
+                        $items = $requests->values();
+                        $sectionCodeSpans = [];
+                        $sectionNoSpans = [];
+                        $accountSpans = [];
+                        
+                        $i = 0;
+                        while ($i < $items->count()) {
+                            // 1. Group by section_code (e.g. "A")
+                            $codeStart = $i;
+                            $currentCode = $items[$i]->section_code;
+                            $codeCount = 0;
+                            while ($i < $items->count() && $items[$i]->section_code === $currentCode) {
+                                $codeCount++;
+                                $i++;
+                            }
+                            $sectionCodeSpans[$codeStart] = $codeCount;
 
-                        {{-- Account Process - Auditi: readonly --}}
-                        <td class="text-slate-600">{{ $req->account_process ?? '-' }}</td>
+                            // 2. Within section_code, group by section (e.g. "A.1") AND account_process
+                            $j = $codeStart;
+                            while ($j < $codeStart + $codeCount) {
+                                $noStart = $j;
+                                $currentNo = $items[$j]->section;
+                                $currentAccount = $items[$j]->account_process;
+                                $noCount = 0;
+                                
+                                while ($j < $codeStart + $codeCount && 
+                                       $items[$j]->section === $currentNo && 
+                                       $items[$j]->account_process === $currentAccount) {
+                                    $noCount++;
+                                    $j++;
+                                }
+                                $sectionNoSpans[$noStart] = $noCount;
+                                $accountSpans[$noStart] = $noCount; // Account merges identically with Section No
+                            }
+                        }
+                    @endphp
 
-                        {{-- Description - Auditi: readonly --}}
-                        <td class="max-w-[200px] truncate text-slate-600" title="{{ $req->description }}">{{ $req->description ?? '-' }}</td>
+                    @foreach($items as $idx => $req)
+                        <tr wire:key="req-{{ $req->id }}">
+                            {{-- Section Code column (e.g. "A") --}}
+                            @if(isset($sectionCodeSpans[$idx]))
+                            <td class="font-bold text-slate-900 text-center align-middle bg-slate-50" rowspan="{{ $sectionCodeSpans[$idx] }}">
+                                {{ $req->section_code ?: '-' }}
+                            </td>
+                            @endif
 
-                        {{-- Request Date - Auditi: readonly --}}
+                            {{-- Section No per row (e.g. "A.1") --}}
+                            @if(isset($sectionNoSpans[$idx]))
+                            <td class="font-mono font-semibold text-slate-700 whitespace-nowrap align-top text-center" rowspan="{{ $sectionNoSpans[$idx] }}">
+                                {{ $req->section ?: '-' }}
+                            </td>
+                            @endif
+
+                            {{-- Account / Process --}}
+                            @if(isset($accountSpans[$idx]))
+                            <td class="text-slate-600 align-top" rowspan="{{ $accountSpans[$idx] }}">
+                                {{ $req->account_process ?? '-' }}
+                            </td>
+                            @endif
+
+                            {{-- Description --}}
+                            <td class="max-w-[200px] text-slate-600">
+                                {{ $req->description ?? '-' }}
+                            </td>
+
+                        {{-- Request Date --}}
                         <td class="whitespace-nowrap text-slate-600">{{ $req->request_date?->format('d/m/Y') ?? '-' }}</td>
 
-                        {{-- Expected Received - Auditi: readonly --}}
+                        {{-- Expected Received --}}
                         <td class="whitespace-nowrap text-slate-600">{{ $req->expected_received?->format('d/m/Y') ?? '-' }}</td>
 
-                        {{-- Input File - Triangle Icon (Green = uploaded, Red = not uploaded) --}}
+                        {{-- Input File --}}
                         <td>
                             <div class="flex items-center gap-2">
-                                {{-- Triangle Icon Button --}}
                                 <button wire:click="toggleFileDetail({{ $req->id }})"
                                     class="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-200 hover:scale-110 {{ $req->input_file ? 'bg-emerald-100 hover:bg-emerald-200' : 'bg-red-100 hover:bg-red-200' }}"
                                     title="{{ $req->input_file ? 'File sudah diupload — klik untuk detail' : 'File belum diupload — klik untuk detail' }}">
@@ -109,7 +163,6 @@
                                         Download
                                     </a>
                                 @else
-                                    {{-- Upload area: Both auditor and auditi can upload --}}
                                     <div x-data="{ uploading: false }" class="space-y-2">
                                         <div class="flex items-center gap-2">
                                             <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
@@ -149,7 +202,7 @@
                         {{-- Last Update --}}
                         <td class="whitespace-nowrap text-xs text-slate-400">{{ $req->last_update?->format('d/m/Y H:i') ?? '-' }}</td>
 
-                        {{-- Date Input (Auto-filled, tidak bisa diisi manual) --}}
+                        {{-- Date Input --}}
                         <td class="whitespace-nowrap text-slate-600">
                             @if($req->date_input)
                                 <div class="text-xs">
@@ -231,7 +284,7 @@
                     </div>
                     <div>
                         <label class="form-label">Section No</label>
-                        <input wire:model="section_no_input" type="number" class="form-input" placeholder="Contoh: 1, 2, 3" min="0">
+                        <input wire:model="section_no_input" type="text" class="form-input" placeholder="Contoh: A.1, B.2, C.3">
                         @error('section_no_input') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
