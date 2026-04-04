@@ -5,29 +5,35 @@ namespace App\Console\Commands;
 use App\Mail\FollowupDataRequestMail;
 use App\Models\DataRequest;
 use App\Models\Invitation;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
 class SendFollowupReminders extends Command
 {
     protected $signature = 'audit:send-followup';
-    protected $description = 'Kirim email reminder ke auditi untuk data request yang terlambat 5-6 hari';
+    protected $description = 'Kirim email reminder ke auditi & auditor untuk data request yang lewat jatuh tempo';
 
     public function handle(): int
     {
         $this->info('🔍 Mencari data request yang terlambat...');
 
         // Cari data request yang:
-        // 1. expected_received sudah lewat 5-6 hari
-        // 2. Belum ada file yang diupload (input_file = null)
+        // 1. expected_received sudah lewat jatuh tempo
+        // 2. Belum ada file yang diupload (input_file = null atau '[]')
         // 3. Belum pernah dikirim followup (followup_sent_at = null)
-        $overdueRequests = DataRequest::whereNull('input_file')
+        /** @var \Illuminate\Database\Eloquent\Collection<int, DataRequest> $overdueRequests */
+        $overdueRequests = DataRequest::query()->where(function (Builder $q) {
+            $q->whereNull('input_file')
+                ->orWhere('input_file', '[]')
+                ->orWhere('input_file', '')
+                ->orWhere('input_file', 'null');
+        })
             ->whereNull('followup_sent_at')
             ->whereNotNull('expected_received')
-            ->where('expected_received', '<=', now()->subDays(5))
-            ->where('expected_received', '>=', now()->subDays(7)) // Batas atas supaya tidak spam
+            ->where('expected_received', '<', now()->startOfDay())
             ->where('status', '!=', DataRequest::STATUS_NOT_APPLICABLE)
-            ->with(['client', 'kapProfile'])
+            ->with(['client', 'kapProfile.user'])
             ->get();
 
         if ($overdueRequests->isEmpty()) {
@@ -37,6 +43,7 @@ class SendFollowupReminders extends Command
 
         $sent = 0;
         foreach ($overdueRequests as $request) {
+            /** @var DataRequest $request */
             $client = $request->client;
             $kap = $request->kapProfile;
 
@@ -58,8 +65,17 @@ class SendFollowupReminders extends Command
 
             $daysOverdue = (int) now()->diffInDays($request->expected_received);
 
+            // Dapatkan email auditor
+            $auditorEmail = $kap->user ? $kap->user->email : null;
+
             try {
-                Mail::to($invitation->email)->send(
+                $mail = Mail::to($invitation->email);
+
+                if ($auditorEmail) {
+                    $mail->cc($auditorEmail);
+                }
+
+                $mail->send(
                     new FollowupDataRequestMail(
                         dataRequest: $request,
                         clientName: $client->nama_client,

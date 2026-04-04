@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class DataRequest extends Model
 {
@@ -36,6 +37,7 @@ class DataRequest extends Model
             'date_input' => 'datetime',
             'last_update' => 'datetime',
             'followup_sent_at' => 'datetime',
+            'input_file' => 'array',
         ];
     }
 
@@ -88,7 +90,7 @@ class DataRequest extends Model
     protected static function booted(): void
     {
         static::saving(function (DataRequest $model) {
-            $model->last_update = now();
+            $model->last_update = Carbon::now();
         });
     }
 }

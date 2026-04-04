@@ -17,6 +17,7 @@ class User extends Authenticatable
         'role',
         'kap_id',
         'invitation_token',
+        'google_id',
     ];
 
     protected $hidden = [

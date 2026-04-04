@@ -9,6 +9,8 @@ use App\Livewire\InviteManager;
 use App\Livewire\DataRequestTable;
 use App\Livewire\SuperAdminDashboard;
 use App\Livewire\UserManager;
+use App\Http\Controllers\Auth\GoogleController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,9 +18,14 @@ use Illuminate\Support\Facades\Route;
 | Guest Routes (Belum Login)
 |--------------------------------------------------------------------------
 */
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', Login::class)->name('login');
     Route::get('/register', Register::class)->name('register');
+
+    // Rute Login Google
+    Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.login');
+    Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
 });
 
 /*
@@ -32,7 +39,7 @@ Route::middleware('auth')->group(function () {
 
     // Logout
     Route::post('/logout', function () {
-        auth()->logout();
+        Auth::logout();
         session()->invalidate();
         session()->regenerateToken();
         return redirect()->route('login');

@@ -4,6 +4,10 @@ namespace App\Livewire;
 
 use App\Models\DataRequest;
 use App\Models\Client;
+use App\Models\User;
+use App\Models\Invitation;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -28,7 +32,7 @@ class DataRequestTable extends Component
     public string $comment_auditor = '';
 
     // File & comments
-    public $uploadFile = null;
+    public $uploadFiles = [];
     public ?int $commentRowId = null;
     public string $newComment = '';
 
@@ -39,9 +43,15 @@ class DataRequestTable extends Component
     {
         $this->clientId = $clientId;
 
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user) {
+            abort(403);
+        }
+
         // If auditi, find their client_id from invitation
-        if (auth()->user()->isAuditi() && !$this->clientId) {
-            $invitation = \App\Models\Invitation::where('email', auth()->user()->email)
+        if ($user->isAuditi() && !$this->clientId) {
+            $invitation = Invitation::where('email', $user->email)
                 ->whereNotNull('accepted_at')
                 ->first();
             $this->clientId = $invitation?->client_id;
@@ -70,8 +80,8 @@ class DataRequestTable extends Component
         $this->section_no_input = $row->section_no !== null ? (string) $row->section_no : '';
         $this->account_process = $row->account_process ?? '';
         $this->description = $row->description ?? '';
-        $this->request_date = $row->request_date?->format('Y-m-d');
-        $this->expected_received = $row->expected_received?->format('Y-m-d');
+        $this->request_date = $row->request_date ? date('Y-m-d', strtotime((string) $row->request_date)) : null;
+        $this->expected_received = $row->expected_received ? date('Y-m-d', strtotime((string) $row->expected_received)) : null;
         $this->status = $row->status;
         $this->comment_client = $row->comment_client ?? '';
         $this->comment_auditor = $row->comment_auditor ?? '';
@@ -130,22 +140,33 @@ class DataRequestTable extends Component
         $this->expandedFileRow = $this->expandedFileRow === $id ? null : $id;
     }
 
-    public function uploadFileForRow(int $id)
+    public function uploadFilesForRow(int $id)
     {
-        $this->validate(['uploadFile' => 'required|file|max:10240']);
+        $this->validate([
+            'uploadFiles.*' => 'required|file|max:10240'
+        ]);
 
         $row = $this->getQuery()->findOrFail($id);
-        $path = $this->uploadFile->store("uploads/{$this->clientId}", 'public');
+
+        $paths = $row->input_file ?? [];
+        if (!is_array($paths)) {
+            $paths = [];
+        }
+
+        $uploadedCount = count($this->uploadFiles);
+        foreach ($this->uploadFiles as $file) {
+            $paths[] = $file->store("uploads/{$this->clientId}", 'public');
+        }
 
         $row->update([
-            'input_file' => $path,
+            'input_file' => $paths,
             'status' => DataRequest::STATUS_ON_REVIEW,
             'date_input' => now(), // Auto-timestamp saat upload
         ]);
 
-        $this->uploadFile = null;
+        $this->uploadFiles = [];
         $this->expandedFileRow = null;
-        session()->flash('success', 'File berhasil diupload! Status: On Review.');
+        session()->flash('success', $uploadedCount . ' file berhasil diupload! Status: On Review.');
     }
 
     public function updateStatus(int $id, string $status)
@@ -158,7 +179,13 @@ class DataRequestTable extends Component
     public function saveComment(int $id)
     {
         $row = $this->getQuery()->findOrFail($id);
-        $field = auth()->user()->isAuditor() ? 'comment_auditor' : 'comment_client';
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user) {
+            abort(403);
+        }
+
+        $field = $user->isAuditor() ? 'comment_auditor' : 'comment_client';
         $row->update([$field => $this->newComment]);
         $this->commentRowId = null;
         $this->newComment = '';
@@ -168,7 +195,13 @@ class DataRequestTable extends Component
     {
         $row = $this->getQuery()->findOrFail($id);
         $this->commentRowId = $id;
-        $this->newComment = auth()->user()->isAuditor()
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user) {
+            abort(403);
+        }
+
+        $this->newComment = $user->isAuditor()
             ? ($row->comment_auditor ?? '')
             : ($row->comment_client ?? '');
     }
@@ -180,34 +213,43 @@ class DataRequestTable extends Component
 
     private function getKapId()
     {
-        if (auth()->user()->isAuditor()) {
-            return auth()->user()->kapProfile?->id;
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user) {
+            return null;
         }
-        $invitation = \App\Models\Invitation::where('email', auth()->user()->email)
+
+        if ($user->isAuditor()) {
+            return $user->kapProfile?->id;
+        }
+        $invitation = Invitation::where('email', $user->email)
             ->whereNotNull('accepted_at')
             ->first();
         return $invitation?->kap_id;
     }
 
+    #[Layout('layouts.app')]
     public function render()
     {
         $requests = $this->clientId
             ? DataRequest::where('client_id', $this->clientId)
-                ->orderBy('section_code')
-                ->orderBy('section_no')
-                ->orderBy('no')
-                ->get()
+            ->orderBy('section_code')
+            ->orderBy('section_no')
+            ->orderBy('no')
+            ->get()
             : collect();
 
         $clients = [];
-        if (auth()->user()->isAuditor() && auth()->user()->kapProfile) {
-            $clients = auth()->user()->kapProfile->clients;
+        /** @var User|null $user */
+        $user = Auth::user();
+        if ($user && $user->isAuditor() && $user->kapProfile) {
+            $clients = $user->kapProfile->clients;
         }
 
         return view('livewire.data-request-table', [
             'requests' => $requests,
             'clients' => $clients,
             'statuses' => DataRequest::STATUSES,
-        ])->layout('layouts.app', ['title' => 'Client Assistance Schedule']);
+        ]);
     }
 }
