@@ -58,4 +58,3 @@ class Dashboard extends Component
         return view('livewire.dashboard', $data);
     }
 }
-

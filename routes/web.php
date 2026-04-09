@@ -9,6 +9,8 @@ use App\Livewire\InviteManager;
 use App\Livewire\DataRequestTable;
 use App\Livewire\SuperAdminDashboard;
 use App\Livewire\UserManager;
+use App\Livewire\AdminKapManager;
+use App\Livewire\AdminClientManager;
 use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -68,5 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('superadmin')->prefix('admin')->group(function () {
         Route::get('/dashboard', SuperAdminDashboard::class)->name('admin.dashboard');
         Route::get('/users', UserManager::class)->name('admin.users');
+        Route::get('/kaps', AdminKapManager::class)->name('admin.kaps');
+        Route::get('/clients', AdminClientManager::class)->name('admin.clients');
     });
 });

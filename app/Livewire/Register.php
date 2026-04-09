@@ -38,13 +38,6 @@ class Register extends Component
 
     public function register()
     {
-        $this->validate([
-            'name' => 'required|min:3|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed',
-            'role' => ['required', Rule::in(['auditi'])],
-        ]);
-
         $invitation = null;
         if ($this->invitation_token) {
             $invitation = Invitation::where('token', $this->invitation_token)
@@ -63,7 +56,19 @@ class Register extends Component
                 $this->addError('email', 'Email harus sama dengan email pada undangan.');
                 return;
             }
+
+            if (User::where('email', $this->email)->exists()) {
+                return redirect()->route('login')
+                    ->with('success', 'Email ini sudah terdaftar. Silakan login untuk mengaktifkan undangan Anda.');
+            }
         }
+
+        $this->validate([
+            'name' => 'required|min:3|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed',
+            'role' => ['required', Rule::in(['auditor', 'auditi'])],
+        ]);
 
         $user = User::create([
             'name' => $this->name,
@@ -74,9 +79,8 @@ class Register extends Component
             'invitation_token' => $this->invitation_token ?: null,
         ]);
 
-        // Accept invitation if exists
         if ($invitation) {
-            $invitation->update(['accepted_at' => now()]);
+            Invitation::acceptForUser($user, $invitation);
         }
 
         Auth::login($user);

@@ -5,27 +5,37 @@
     <form wire:submit="register" class="space-y-4">
         <div>
             <label class="form-label">Nama Lengkap</label>
-            <input wire:model="name" type="text" class="form-input" placeholder="Masukkan nama lengkap" id="register-name">
-            @error('name') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
+            <input wire:model="name" type="text" class="form-input" placeholder="Masukkan nama lengkap"
+                id="register-name">
+            @error('name')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+            @enderror
         </div>
 
         <div>
             <label class="form-label">Email</label>
-            <input wire:model="email" type="email" class="form-input" placeholder="email@contoh.com" id="register-email" {{ $invitation_token ? 'readonly' : '' }}>
-            @error('email') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
+            <input wire:model="email" type="email" class="form-input" placeholder="email@contoh.com"
+                id="register-email" {{ $invitation_token ? 'readonly' : '' }}>
+            @error('email')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+            @enderror
         </div>
 
-        <input type="hidden" wire:model="role" value="auditi">
+        <input type="hidden" wire:model="role">
 
         <div>
             <label class="form-label">Password</label>
-            <input wire:model="password" type="password" class="form-input" placeholder="Minimal 8 karakter" id="register-password">
-            @error('password') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
+            <input wire:model="password" type="password" class="form-input" placeholder="Minimal 8 karakter"
+                id="register-password">
+            @error('password')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+            @enderror
         </div>
 
         <div>
             <label class="form-label">Konfirmasi Password</label>
-            <input wire:model="password_confirmation" type="password" class="form-input" placeholder="Ulangi password" id="register-password-confirm">
+            <input wire:model="password_confirmation" type="password" class="form-input" placeholder="Ulangi password"
+                id="register-password-confirm">
         </div>
 
         <button type="submit" class="btn-auditor w-full text-center" id="register-submit">

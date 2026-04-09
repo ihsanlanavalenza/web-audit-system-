@@ -47,10 +47,30 @@ class InviteManager extends Component
             ],
         ]);
 
+        $normalizedEmail = strtolower(trim($this->email));
+
+        $duplicatePendingInvite = Invitation::query()
+            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+            ->where('kap_id', $kap->id)
+            ->where('role', $this->role)
+            ->when(
+                $this->role === 'auditi',
+                fn($q) => $q->where('client_id', $this->client_id),
+                fn($q) => $q->whereNull('client_id')
+            )
+            ->pending()
+            ->active()
+            ->exists();
+
+        if ($duplicatePendingInvite) {
+            session()->flash('error', 'Undangan aktif untuk email dan scope yang sama sudah ada.');
+            return;
+        }
+
         $invitation = Invitation::create([
             'kap_id' => $kap->id,
             'client_id' => $this->role === 'auditi' ? $this->client_id : null,
-            'email' => $this->email,
+            'email' => $normalizedEmail,
             'role' => $this->role,
             'token' => Invitation::generateToken(),
             'expires_at' => now()->addDays(7),

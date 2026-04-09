@@ -38,13 +38,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('clients', function (Blueprint $table) {
-            $table->dropColumn('alamat');
-        });
-
         // Revert date back to year
         Schema::table('clients', function (Blueprint $table) {
-            $table->year('tahun_audit_old')->nullable()->after('alamat');
+            $table->year('tahun_audit_old')->nullable()->after('no_contact');
         });
 
         DB::table('clients')->whereNotNull('tahun_audit')->orderBy('id')->each(function ($client) {
@@ -59,6 +55,10 @@ return new class extends Migration
 
         Schema::table('clients', function (Blueprint $table) {
             $table->renameColumn('tahun_audit_old', 'tahun_audit');
+        });
+
+        Schema::table('clients', function (Blueprint $table) {
+            $table->dropColumn('alamat');
         });
     }
 };

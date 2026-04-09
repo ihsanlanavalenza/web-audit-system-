@@ -3,6 +3,10 @@
 namespace App\Livewire;
 
 use App\Models\Client;
+use App\Models\KapProfile;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 class ClientManager extends Component
@@ -29,6 +33,11 @@ class ClientManager extends Component
 
     public function openModal()
     {
+        $kap = $this->getKapProfile();
+        if (!$kap) {
+            return redirect()->route('kap-profile');
+        }
+
         $this->reset(['nama_client', 'nama_pic', 'no_contact', 'alamat', 'tahun_audit', 'editId']);
         $this->tahun_audit = date('Y') . '-12-31';
         $this->showModal = true;
@@ -36,7 +45,12 @@ class ClientManager extends Component
 
     public function editClient(int $id)
     {
-        $client = $this->getKapProfile()->clients()->findOrFail($id);
+        $kap = $this->getKapProfile();
+        if (!$kap) {
+            return redirect()->route('kap-profile');
+        }
+
+        $client = $kap->clients()->findOrFail($id);
         $this->editId = $client->id;
         $this->nama_client = $client->nama_client;
         $this->nama_pic = $client->nama_pic;
@@ -50,6 +64,9 @@ class ClientManager extends Component
     {
         $this->validate();
         $kap = $this->getKapProfile();
+        if (!$kap) {
+            return redirect()->route('kap-profile');
+        }
 
         if ($this->editId) {
             $client = $kap->clients()->findOrFail($this->editId);
@@ -77,33 +94,51 @@ class ClientManager extends Component
 
     public function deleteClient(int $id)
     {
-        $this->getKapProfile()->clients()->findOrFail($id)->delete();
+        $kap = $this->getKapProfile();
+        if (!$kap) {
+            return redirect()->route('kap-profile');
+        }
+
+        $kap->clients()->findOrFail($id)->delete();
         session()->flash('success', 'Klien berhasil dihapus!');
     }
 
     public function deleteAll()
     {
-        $this->getKapProfile()->clients()->delete();
+        $kap = $this->getKapProfile();
+        if (!$kap) {
+            return redirect()->route('kap-profile');
+        }
+
+        $kap->clients()->delete();
         $this->showDeleteConfirm = false;
         session()->flash('success', 'Semua klien berhasil dihapus!');
     }
 
-    private function getKapProfile()
+    private function getKapProfile(): ?KapProfile
     {
-        $kap = auth()->user()->kapProfile;
+        /** @var User|null $user */
+        $user = Auth::user();
+        $kap = $user?->kapProfile;
         if (!$kap) {
             session()->flash('error', 'Silakan isi Profil KAP terlebih dahulu.');
-            return redirect()->route('kap-profile');
+            return null;
         }
+
         return $kap;
     }
 
+    #[Layout('layouts.app')]
     public function render()
     {
-        $kap = auth()->user()->kapProfile;
+        /** @var User|null $user */
+        $user = Auth::user();
+        $kap = $user?->kapProfile;
         $clients = $kap ? $kap->clients()->latest()->get() : collect();
 
-        return view('livewire.client-manager', compact('clients'))
-            ->layout('layouts.app', ['title' => 'Manajemen Klien']);
+        return view('livewire.client-manager', [
+            'clients' => $clients,
+            'title' => 'Manajemen Klien',
+        ]);
     }
 }

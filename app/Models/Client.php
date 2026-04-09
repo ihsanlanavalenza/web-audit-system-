@@ -4,7 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $kap_id
+ * @property string $nama_client
+ * @property string $nama_pic
+ * @property string $no_contact
+ * @property string|null $alamat
+ * @property Carbon|null $tahun_audit
+ */
 class Client extends Model
 {
     use HasFactory;
@@ -21,7 +31,7 @@ class Client extends Model
     protected function casts(): array
     {
         return [
-            'tahun_audit' => 'integer',
+            'tahun_audit' => 'date',
         ];
     }
 
