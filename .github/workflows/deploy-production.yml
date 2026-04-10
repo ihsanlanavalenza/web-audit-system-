@@ -102,7 +102,9 @@ jobs:
           server: ${{ secrets.CPANEL_FTP_SERVER }}
           username: ${{ secrets.CPANEL_FTP_USERNAME }}
           password: ${{ secrets.CPANEL_FTP_PASSWORD }}
-          port: ${{ secrets.CPANEL_FTP_PORT }}
+          port: ${{ secrets.CPANEL_FTP_PORT != '' && secrets.CPANEL_FTP_PORT || 21 }}
+          protocol: ${{ secrets.CPANEL_FTP_PROTOCOL != '' && secrets.CPANEL_FTP_PROTOCOL || 'ftp' }}
           local-dir: release/
           server-dir: ${{ endsWith(secrets.CPANEL_TARGET_DIR, '/') && secrets.CPANEL_TARGET_DIR || format('{0}/', secrets.CPANEL_TARGET_DIR) }}
+          log-level: standard
           dangerous-clean-slate: false

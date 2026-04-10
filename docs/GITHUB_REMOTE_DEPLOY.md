@@ -69,7 +69,10 @@ Tambahkan ini satu per satu:
   - isi password FTP
 4. `CPANEL_FTP_PORT`
   - biasanya `21`
-5. `CPANEL_TARGET_DIR`
+5. `CPANEL_FTP_PROTOCOL` (opsional)
+  - isi `ftp` (default) atau `ftps` sesuai setting hosting
+  - jika hosting mewajibkan FTPS, gunakan `ftps`
+6. `CPANEL_TARGET_DIR`
   - gunakan `/home/auditinm/web-audit-system-/`
   - pastikan target direktori folder (akhiri dengan `/`)
 
@@ -77,6 +80,7 @@ Catatan:
 
 - Workflow sudah otomatis menjalankan `npm run build`.
 - Workflow deploy tidak mengirim folder `docs` dan file markdown (`*.md`).
+- Jika error `ECONNREFUSED` pada step FTP, cek ulang kombinasi `CPANEL_FTP_SERVER`, `CPANEL_FTP_PORT`, dan `CPANEL_FTP_PROTOCOL` dari cPanel FTP Accounts.
 
 ## 4) First Deploy Verification di cPanel
 
