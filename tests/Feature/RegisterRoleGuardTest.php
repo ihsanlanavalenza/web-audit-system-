@@ -14,19 +14,20 @@ class RegisterRoleGuardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_public_registration_defaults_to_auditi_role(): void
+    public function test_public_registration_can_choose_auditor_role(): void
     {
         Livewire::test(Register::class)
             ->set('name', 'Public User')
             ->set('email', 'public@example.com')
             ->set('password', 'password123')
             ->set('password_confirmation', 'password123')
+            ->set('role', 'auditor')
             ->call('register')
             ->assertRedirect(route('dashboard'));
 
         $this->assertDatabaseHas('users', [
             'email' => 'public@example.com',
-            'role' => 'auditi',
+            'role' => 'auditor',
         ]);
     }
 

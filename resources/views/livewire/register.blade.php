@@ -21,6 +21,39 @@
             @enderror
         </div>
 
+        @if ($invitation_token)
+            <div class="rounded-lg border border-blue-100 bg-blue-50 p-3">
+                <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Role dari undangan</p>
+                <p class="text-sm text-blue-900 mt-1">Role akun akan mengikuti role yang ditentukan pada undangan.</p>
+            </div>
+        @else
+            <div>
+                <label class="form-label">Daftar Sebagai</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="block cursor-pointer">
+                        <input type="radio" wire:model="role" value="auditor" class="sr-only peer">
+                        <div
+                            class="rounded-xl border border-slate-200 p-3 transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:ring-2 peer-checked:ring-blue-200">
+                            <p class="font-semibold text-slate-900 text-sm">Auditor</p>
+                            <p class="text-xs text-slate-500 mt-1">Kelola KAP, klien, dan proses audit.</p>
+                        </div>
+                    </label>
+
+                    <label class="block cursor-pointer">
+                        <input type="radio" wire:model="role" value="auditi" class="sr-only peer">
+                        <div
+                            class="rounded-xl border border-slate-200 p-3 transition-all peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:ring-2 peer-checked:ring-red-200">
+                            <p class="font-semibold text-slate-900 text-sm">Auditi</p>
+                            <p class="text-xs text-slate-500 mt-1">Upload dokumen dan tindak lanjut permintaan audit.</p>
+                        </div>
+                    </label>
+                </div>
+                @error('role')
+                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+        @endif
+
         <div>
             <label class="form-label">Password</label>
             <input wire:model="password" type="password" class="form-input" placeholder="Minimal 8 karakter"

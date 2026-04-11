@@ -15,6 +15,7 @@ class Register extends Component
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public string $role = 'auditi';
     public string $invitation_token = '';
 
     public function mount()
@@ -64,9 +65,10 @@ class Register extends Component
             'name' => 'required|min:3|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
+            'role' => 'required|in:auditor,auditi',
         ]);
 
-        $role = 'auditi';
+        $role = $this->role;
         if ($invitation && in_array($invitation->role, ['auditor', 'auditi'], true)) {
             $role = $invitation->role;
         }
