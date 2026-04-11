@@ -45,6 +45,25 @@ class Login extends Component
     #[Layout('layouts.guest')]
     public function render()
     {
-        return view('livewire.login');
+        return view('livewire.login', [
+            'googleLoginEnabled' => $this->hasGoogleOauthConfig(),
+        ]);
+    }
+
+    private function hasGoogleOauthConfig(): bool
+    {
+        $clientId = (string) config('services.google.client_id');
+        $clientSecret = (string) config('services.google.client_secret');
+        $redirect = (string) config('services.google.redirect');
+
+        if (!filled($clientId) || !filled($clientSecret) || !filled($redirect)) {
+            return false;
+        }
+
+        if ((string) config('app.env') === 'production' && str_contains($redirect, 'localhost')) {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -170,8 +170,9 @@ jobs:
               set_env() {
                 key="$1"
                 value="$2"
+                escaped_value="$(printf '%s' "$value" | sed 's/[&|]/\\\\&/g')"
                 if grep -Eq "^${key}=" "$APP_DIR/.env"; then
-                  sed -i "s|^${key}=.*|${key}=${value}|" "$APP_DIR/.env"
+                  sed -i "s|^${key}=.*|${key}=${escaped_value}|" "$APP_DIR/.env"
                 else
                   echo "${key}=${value}" >> "$APP_DIR/.env"
                 fi
@@ -181,6 +182,21 @@ jobs:
               set_env "APP_ENV" "production"
               set_env "APP_DEBUG" "false"
               set_env "APP_URL" "https://auditin.my.id"
+
+              GOOGLE_CLIENT_ID_VALUE='${{ secrets.GOOGLE_CLIENT_ID }}'
+              GOOGLE_CLIENT_SECRET_VALUE='${{ secrets.GOOGLE_CLIENT_SECRET }}'
+              GOOGLE_REDIRECT_URI_VALUE='${{ secrets.GOOGLE_REDIRECT_URI }}'
+
+              if [ -n "$GOOGLE_CLIENT_ID_VALUE" ] && [ -n "$GOOGLE_CLIENT_SECRET_VALUE" ]; then
+                set_env "GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_ID_VALUE"
+                set_env "GOOGLE_CLIENT_SECRET" "$GOOGLE_CLIENT_SECRET_VALUE"
+
+                if [ -z "$GOOGLE_REDIRECT_URI_VALUE" ]; then
+                  GOOGLE_REDIRECT_URI_VALUE="https://auditin.my.id/auth/google/callback"
+                fi
+
+                set_env "GOOGLE_REDIRECT_URI" "$GOOGLE_REDIRECT_URI_VALUE"
+              fi
 
               DB_CONNECTION_VALUE="$(grep -E '^DB_CONNECTION=' "$APP_DIR/.env" | tail -n 1 | cut -d '=' -f2-)"
               if [ -z "$DB_CONNECTION_VALUE" ]; then

@@ -116,9 +116,19 @@ class GoogleController extends Controller
 
     private function hasGoogleOauthConfig(): bool
     {
-        return filled(config('services.google.client_id'))
-            && filled(config('services.google.client_secret'))
-            && filled(config('services.google.redirect'));
+        $clientId = (string) config('services.google.client_id');
+        $clientSecret = (string) config('services.google.client_secret');
+        $redirect = (string) config('services.google.redirect');
+
+        if (!filled($clientId) || !filled($clientSecret) || !filled($redirect)) {
+            return false;
+        }
+
+        if ((string) config('app.env') === 'production' && str_contains($redirect, 'localhost')) {
+            return false;
+        }
+
+        return true;
     }
 
     private function resolveOauthErrorMessage(\Throwable $e): string

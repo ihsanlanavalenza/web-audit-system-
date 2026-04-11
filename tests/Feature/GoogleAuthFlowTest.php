@@ -25,4 +25,17 @@ class GoogleAuthFlowTest extends TestCase
         $response->assertRedirect(route('login'));
         $response->assertSessionHas('error', 'Konfigurasi Google Login belum lengkap. Hubungi admin sistem.');
     }
+
+    public function test_google_redirect_requires_non_localhost_redirect_in_production(): void
+    {
+        config()->set('app.env', 'production');
+        config()->set('services.google.client_id', 'dummy-id');
+        config()->set('services.google.client_secret', 'dummy-secret');
+        config()->set('services.google.redirect', 'http://localhost:8000/auth/google/callback');
+
+        $response = $this->get(route('google.login'));
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHas('error', 'Konfigurasi Google Login belum lengkap. Hubungi admin sistem.');
+    }
 }
