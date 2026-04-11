@@ -30,7 +30,11 @@ Route::get('/__diag/logs', function () {
 
     $tail = implode('', array_slice($lines, -250));
     return response($tail, 200, ['Content-Type' => 'text/plain; charset=utf-8']);
-});
+})->withoutMiddleware([
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+]);
 
 /*
 |--------------------------------------------------------------------------
