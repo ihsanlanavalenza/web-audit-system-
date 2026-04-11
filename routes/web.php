@@ -18,19 +18,45 @@ use Illuminate\Support\Facades\Route;
 Route::get('/__diag/logs', function () {
     abort_unless(request('k') === 'diag-web-audit-500', 404);
 
+    $report = [
+        'app_env' => (string) config('app.env'),
+        'app_debug' => (string) (config('app.debug') ? 'true' : 'false'),
+        'app_key_set' => (string) (!empty(config('app.key')) ? 'true' : 'false'),
+        'session_driver' => (string) config('session.driver'),
+        'cache_store' => (string) config('cache.default'),
+        'queue_default' => (string) config('queue.default'),
+    ];
+
     $logPath = storage_path('logs/laravel.log');
     if (!is_file($logPath)) {
-        return response("Log file not found: {$logPath}\n", 404, ['Content-Type' => 'text/plain; charset=utf-8']);
+        $info = "Diagnostics:\n";
+        foreach ($report as $key => $value) {
+            $info .= "{$key}={$value}\n";
+        }
+
+        return response($info."\nLog file not found: {$logPath}\n", 404, ['Content-Type' => 'text/plain; charset=utf-8']);
     }
 
     $lines = @file($logPath);
     if ($lines === false) {
-        return response("Unable to read log file: {$logPath}\n", 500, ['Content-Type' => 'text/plain; charset=utf-8']);
+        $info = "Diagnostics:\n";
+        foreach ($report as $key => $value) {
+            $info .= "{$key}={$value}\n";
+        }
+
+        return response($info."\nUnable to read log file: {$logPath}\n", 500, ['Content-Type' => 'text/plain; charset=utf-8']);
     }
 
     $tail = implode('', array_slice($lines, -250));
-    return response($tail, 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+    $info = "Diagnostics:\n";
+    foreach ($report as $key => $value) {
+        $info .= "{$key}={$value}\n";
+    }
+
+    return response($info."\n--- laravel.log (tail) ---\n".$tail, 200, ['Content-Type' => 'text/plain; charset=utf-8']);
 })->withoutMiddleware([
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
     \Illuminate\Session\Middleware\StartSession::class,
     \Illuminate\View\Middleware\ShareErrorsFromSession::class,
     \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
