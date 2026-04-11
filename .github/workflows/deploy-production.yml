@@ -164,6 +164,20 @@ jobs:
 
             if [ ! -f "$APP_DIR/.env" ] && [ -f "$APP_DIR/.env.example" ]; then
               cp "$APP_DIR/.env.example" "$APP_DIR/.env"
+
+              # First deployment fallback: force production-safe defaults.
+              sed -i "s/^APP_ENV=.*/APP_ENV=production/" "$APP_DIR/.env"
+              sed -i "s/^APP_DEBUG=.*/APP_DEBUG=false/" "$APP_DIR/.env"
+              sed -i "s|^APP_URL=.*|APP_URL=https://auditin.my.id|" "$APP_DIR/.env"
+              sed -i "s/^SESSION_DRIVER=.*/SESSION_DRIVER=file/" "$APP_DIR/.env"
+              sed -i "s/^CACHE_STORE=.*/CACHE_STORE=file/" "$APP_DIR/.env"
+              sed -i "s/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/" "$APP_DIR/.env"
+            fi
+
+            # SQLite fallback support for first-run environments.
+            if [ -f "$APP_DIR/.env" ] && grep -Eq '^DB_CONNECTION=sqlite$' "$APP_DIR/.env"; then
+              mkdir -p "$APP_DIR/database"
+              touch "$APP_DIR/database/database.sqlite"
             fi
 
             if [ -d "$APP_DIR/public" ]; then
@@ -216,12 +230,21 @@ jobs:
 
             if [ -f "${APP_DIR}/.env" ]; then
               cd "$APP_DIR"
-              "$PHP_BIN" artisan key:generate --force || true
-              "$PHP_BIN" artisan migrate --force || true
-              "$PHP_BIN" artisan optimize:clear || true
-              "$PHP_BIN" artisan config:cache || true
-              "$PHP_BIN" artisan route:cache || true
-              "$PHP_BIN" artisan view:cache || true
+
+              if ! grep -Eq '^APP_KEY=base64:' .env; then
+                "$PHP_BIN" artisan key:generate --force
+              fi
+
+              "$PHP_BIN" artisan migrate --force
+              "$PHP_BIN" artisan optimize:clear
+              "$PHP_BIN" artisan config:cache
+
+              if ! "$PHP_BIN" artisan route:cache; then
+                echo "route:cache skipped (closure routes detected)."
+                "$PHP_BIN" artisan route:clear
+              fi
+
+              "$PHP_BIN" artisan view:cache
             else
               echo "WARNING: ${APP_DIR}/.env belum ada di server; lewati perintah artisan."
             fi
