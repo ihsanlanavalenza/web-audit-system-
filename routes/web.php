@@ -50,6 +50,51 @@ Route::get('/__diag/logs', function () {
         }
     }
 
+    if (request('repair') === '1') {
+        if (!is_file($envPath) || !is_readable($envPath)) {
+            return response("repair=false\nreason=env_not_readable\npath={$envPath}\n", 500, ['Content-Type' => 'text/plain; charset=utf-8']);
+        }
+
+        $content = file_get_contents($envPath);
+        if ($content === false) {
+            return response("repair=false\nreason=env_read_failed\n", 500, ['Content-Type' => 'text/plain; charset=utf-8']);
+        }
+
+        $setEnv = static function (string $key, string $value, string $buffer): string {
+            $line = $key.'='.$value;
+            if (preg_match('/^'.preg_quote($key, '/').'=.*/m', $buffer)) {
+                return (string) preg_replace('/^'.preg_quote($key, '/').'=.*/m', $line, $buffer, 1);
+            }
+
+            return rtrim($buffer, "\n")."\n{$line}\n";
+        };
+
+        $content = $setEnv('APP_ENV', 'production', $content);
+        $content = $setEnv('APP_DEBUG', 'false', $content);
+        $content = $setEnv('APP_URL', 'https://auditin.my.id', $content);
+        $content = $setEnv('DB_CONNECTION', 'sqlite', $content);
+        $content = $setEnv('SESSION_DRIVER', 'file', $content);
+        $content = $setEnv('CACHE_STORE', 'file', $content);
+        $content = $setEnv('QUEUE_CONNECTION', 'sync', $content);
+
+        if (!preg_match('/^APP_KEY=base64:[A-Za-z0-9+\/=]{40,}$/m', $content)) {
+            $content = $setEnv('APP_KEY', 'base64:'.base64_encode(random_bytes(32)), $content);
+        }
+
+        @touch(database_path('database.sqlite'));
+
+        $tmpEnv = $envPath.'.tmp.'.bin2hex(random_bytes(4));
+        if (file_put_contents($tmpEnv, $content) === false || !@rename($tmpEnv, $envPath)) {
+            @unlink($tmpEnv);
+            return response("repair=false\nreason=env_write_failed\n", 500, ['Content-Type' => 'text/plain; charset=utf-8']);
+        }
+
+        @unlink(base_path('bootstrap/cache/config.php'));
+        @unlink(base_path('bootstrap/cache/routes-v7.php'));
+
+        return response("repair=true\nmessage=env_repaired\n", 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+    }
+
     $logPath = storage_path('logs/laravel.log');
     if (!is_file($logPath)) {
         $info = "Diagnostics:\n";
