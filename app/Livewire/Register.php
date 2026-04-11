@@ -6,7 +6,6 @@ use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -16,7 +15,6 @@ class Register extends Component
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
-    public string $role = 'auditi';
     public string $invitation_token = '';
 
     public function mount()
@@ -31,7 +29,6 @@ class Register extends Component
                 ->first();
             if ($invitation) {
                 $this->email = $invitation->email;
-                $this->role = $invitation->role;
             }
         }
     }
@@ -67,14 +64,18 @@ class Register extends Component
             'name' => 'required|min:3|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
-            'role' => ['required', Rule::in(['auditor', 'auditi'])],
         ]);
+
+        $role = 'auditi';
+        if ($invitation && in_array($invitation->role, ['auditor', 'auditi'], true)) {
+            $role = $invitation->role;
+        }
 
         $user = User::create([
             'name' => $this->name,
             'email' => $this->email,
             'password' => Hash::make($this->password),
-            'role' => $invitation?->role ?? 'auditi',
+            'role' => $role,
             'kap_id' => $invitation?->kap_id,
             'invitation_token' => $this->invitation_token ?: null,
         ]);

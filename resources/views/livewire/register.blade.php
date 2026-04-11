@@ -21,8 +21,6 @@
             @enderror
         </div>
 
-        <input type="hidden" wire:model="role">
-
         <div>
             <label class="form-label">Password</label>
             <input wire:model="password" type="password" class="form-input" placeholder="Minimal 8 karakter"

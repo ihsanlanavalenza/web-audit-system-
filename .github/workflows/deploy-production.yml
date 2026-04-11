@@ -187,6 +187,10 @@ jobs:
               GOOGLE_CLIENT_SECRET_VALUE='${{ secrets.GOOGLE_CLIENT_SECRET }}'
               GOOGLE_REDIRECT_URI_VALUE='${{ secrets.GOOGLE_REDIRECT_URI }}'
 
+              SUPER_ADMIN_EMAIL_VALUE='${{ secrets.SUPER_ADMIN_EMAIL }}'
+              SUPER_ADMIN_PASSWORD_VALUE='${{ secrets.SUPER_ADMIN_PASSWORD }}'
+              SUPER_ADMIN_NAME_VALUE='${{ secrets.SUPER_ADMIN_NAME }}'
+
               if [ -n "$GOOGLE_CLIENT_ID_VALUE" ] && [ -n "$GOOGLE_CLIENT_SECRET_VALUE" ]; then
                 set_env "GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_ID_VALUE"
                 set_env "GOOGLE_CLIENT_SECRET" "$GOOGLE_CLIENT_SECRET_VALUE"
@@ -196,6 +200,21 @@ jobs:
                 fi
 
                 set_env "GOOGLE_REDIRECT_URI" "$GOOGLE_REDIRECT_URI_VALUE"
+              fi
+
+              if [ -z "$SUPER_ADMIN_EMAIL_VALUE" ]; then
+                SUPER_ADMIN_EMAIL_VALUE="admin@webaudit.com"
+              fi
+
+              if [ -z "$SUPER_ADMIN_PASSWORD_VALUE" ]; then
+                SUPER_ADMIN_PASSWORD_VALUE="admin123"
+              fi
+
+              set_env "SUPER_ADMIN_EMAIL" "$SUPER_ADMIN_EMAIL_VALUE"
+              set_env "SUPER_ADMIN_PASSWORD" "$SUPER_ADMIN_PASSWORD_VALUE"
+
+              if [ -n "$SUPER_ADMIN_NAME_VALUE" ]; then
+                set_env "SUPER_ADMIN_NAME" "$SUPER_ADMIN_NAME_VALUE"
               fi
 
               DB_CONNECTION_VALUE="$(grep -E '^DB_CONNECTION=' "$APP_DIR/.env" | tail -n 1 | cut -d '=' -f2-)"
@@ -275,6 +294,7 @@ jobs:
               fi
 
               "$PHP_BIN" artisan migrate --force
+              "$PHP_BIN" artisan db:seed --class=Database\\Seeders\\SuperAdminSeeder --force
               "$PHP_BIN" artisan optimize:clear
               "$PHP_BIN" artisan config:cache
 
