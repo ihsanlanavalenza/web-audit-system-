@@ -176,6 +176,11 @@ jobs:
 
             # SQLite fallback support for first-run environments.
             if [ -f "$APP_DIR/.env" ] && grep -Eq '^DB_CONNECTION=sqlite$' "$APP_DIR/.env"; then
+              # Avoid DB-backed runtime services when bootstrapping with sqlite.
+              sed -i "s/^SESSION_DRIVER=.*/SESSION_DRIVER=file/" "$APP_DIR/.env"
+              sed -i "s/^CACHE_STORE=.*/CACHE_STORE=file/" "$APP_DIR/.env"
+              sed -i "s/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/" "$APP_DIR/.env"
+
               mkdir -p "$APP_DIR/database"
               touch "$APP_DIR/database/database.sqlite"
             fi
