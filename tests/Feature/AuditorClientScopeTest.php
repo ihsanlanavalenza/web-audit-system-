@@ -18,6 +18,7 @@ class AuditorClientScopeTest extends TestCase
 
     public function test_auditor_cannot_open_schedule_for_unassigned_client(): void
     {
+        /** @var User $owner */
         $owner = User::factory()->create([
             'role' => 'auditor',
             'email' => 'owner-http-scope@example.com',
@@ -48,6 +49,7 @@ class AuditorClientScopeTest extends TestCase
             'tahun_audit' => now()->toDateString(),
         ]);
 
+        /** @var User $scopedAuditor */
         $scopedAuditor = User::factory()->create([
             'role' => 'auditor',
             'email' => 'scoped-http@example.com',
@@ -68,6 +70,7 @@ class AuditorClientScopeTest extends TestCase
     {
         Mail::fake();
 
+        /** @var User $owner */
         $owner = User::factory()->create([
             'role' => 'auditor',
             'email' => 'owner-scope@example.com',
@@ -115,6 +118,7 @@ class AuditorClientScopeTest extends TestCase
 
     public function test_accepting_auditor_invitation_with_client_adds_client_access(): void
     {
+        /** @var User $owner */
         $owner = User::factory()->create([
             'role' => 'auditor',
             'email' => 'owner-access@example.com',
@@ -136,6 +140,7 @@ class AuditorClientScopeTest extends TestCase
             'tahun_audit' => now()->toDateString(),
         ]);
 
+        /** @var User $user */
         $user = User::factory()->create([
             'role' => 'auditi',
             'email' => 'new-auditor@example.com',
@@ -163,6 +168,7 @@ class AuditorClientScopeTest extends TestCase
 
     public function test_accepting_legacy_auditor_invitation_without_client_grants_all_kap_clients(): void
     {
+        /** @var User $owner */
         $owner = User::factory()->create([
             'role' => 'auditor',
             'email' => 'owner-legacy@example.com',
@@ -193,6 +199,7 @@ class AuditorClientScopeTest extends TestCase
             'tahun_audit' => now()->toDateString(),
         ]);
 
+        /** @var User $user */
         $user = User::factory()->create([
             'role' => 'auditi',
             'email' => 'legacy-auditor@example.com',

@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int $id
+ * @property int|null $user_id
+ * @property string $nama_kap
+ * @property string $nama_pic
+ * @property string $alamat
  */
 class KapProfile extends Model
 {

@@ -16,7 +16,7 @@
         <div class="w-full max-w-md">
             {{-- Logo --}}
             <div class="text-center mb-8">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
+                <div class="w-16 h-16 rounded-2xl bg-linear-to-br from-blue-600 to-blue-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
                     <span class="text-white font-bold text-xl">WA</span>
                 </div>
                 <h1 class="text-2xl font-bold text-slate-900">WebAudit</h1>
