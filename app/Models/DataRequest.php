@@ -25,6 +25,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $date_input
  * @property Carbon|null $last_update
  * @property Carbon|null $followup_sent_at
+ * @property Carbon|null $followup_7day_sent_at
+ * @property Carbon|null $followup_15day_sent_at
  * @property-read \App\Models\Client|null $client
  * @property-read \App\Models\KapProfile|null $kapProfile
  * @property-read \App\Models\User|null $pic
@@ -52,6 +54,8 @@ class DataRequest extends Model
         'date_input',
         'last_update',
         'followup_sent_at',
+        'followup_7day_sent_at',
+        'followup_15day_sent_at',
     ];
 
     protected function casts(): array
@@ -62,6 +66,8 @@ class DataRequest extends Model
             'date_input' => 'datetime',
             'last_update' => 'datetime',
             'followup_sent_at' => 'datetime',
+            'followup_7day_sent_at' => 'datetime',
+            'followup_15day_sent_at' => 'datetime',
             'input_file' => 'array',
         ];
     }

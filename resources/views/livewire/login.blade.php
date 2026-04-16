@@ -25,8 +25,7 @@
                 Masuk dengan Google
             </a>
         @else
-            <div
-                class="w-full flex justify-center items-center py-2 px-4 border border-slate-200 rounded-md bg-slate-100 text-sm font-medium text-slate-400 cursor-not-allowed"
+            <div class="w-full flex justify-center items-center py-2 px-4 border border-slate-200 rounded-md bg-slate-100 text-sm font-medium text-slate-400 cursor-not-allowed"
                 aria-disabled="true">
                 <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
                     <path fill="#9CA3AF"

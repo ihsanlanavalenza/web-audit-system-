@@ -39,7 +39,7 @@
                         <td class="font-medium text-slate-900">{{ $client->nama_client }}</td>
                         <td class="text-slate-600">{{ $client->nama_pic }}</td>
                         <td class="text-slate-600">{{ $client->no_contact }}</td>
-                        <td class="text-slate-600 max-w-[150px] truncate" title="{{ $client->alamat }}">{{ $client->alamat ?? '-' }}</td>
+                        <td class="text-slate-600 max-w-37.5 truncate" title="{{ $client->alamat }}">{{ $client->alamat ?? '-' }}</td>
                         <td class="text-slate-600">{{ $client->tahun_audit?->format('d/m/Y') ?? '-' }}</td>
                         <td>
                             <div class="flex gap-2">

@@ -18,12 +18,15 @@ class FollowupDataRequestMail extends Mailable
         public string $clientName,
         public string $kapName,
         public int $daysOverdue,
+        public int $followupLevel,
     ) {}
 
     public function envelope(): Envelope
     {
+        $levelLabel = $this->followupLevel === 2 ? 'Follow-up Kedua (15 Hari)' : 'Follow-up Pertama (7 Hari)';
+
         return new Envelope(
-            subject: 'Reminder: Data Audit Belum Diterima — ' . $this->dataRequest->section,
+            subject: $levelLabel . ' - Data Audit Belum Diterima — ' . $this->dataRequest->section,
         );
     }
 

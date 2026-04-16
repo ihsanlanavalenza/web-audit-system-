@@ -28,7 +28,7 @@ Set production values in server environment:
 - `DB_PASSWORD=<set-on-server-only>`
 - `MAIL_MAILER=smtp`
 - `QUEUE_CONNECTION=database` (or redis)
-- `UPLOAD_MAX_FILESIZE >= 10M` dan `POST_MAX_SIZE >= 20M` (sesuai kebutuhan multi-file)
+- `UPLOAD_MAX_FILESIZE >= 10M`, `POST_MAX_SIZE >= 20M`, dan `MAX_FILE_UPLOADS >= 10` (sesuai kebutuhan multi-file)
 
 Then run:
 
@@ -38,6 +38,12 @@ php artisan cache:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+```
+
+Verifikasi directive PHP upload di environment web/server:
+
+```bash
+php -i | grep -E "upload_max_filesize|post_max_size|max_file_uploads"
 ```
 
 ## 3. Database and Storage

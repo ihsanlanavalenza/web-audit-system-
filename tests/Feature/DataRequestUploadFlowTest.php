@@ -58,8 +58,8 @@ class DataRequestUploadFlowTest extends TestCase
         Livewire::actingAs($auditor)
             ->test(DataRequestTable::class, ['clientId' => $client->id])
             ->set('uploadFiles', [
-                UploadedFile::fake()->create('doc-1.pdf', 200, 'application/pdf'),
-                UploadedFile::fake()->create('doc-2.pdf', 150, 'application/pdf'),
+                UploadedFile::fake()->image('img-1.jpg')->size(200),
+                UploadedFile::fake()->image('img-2.png')->size(150),
             ])
             ->call('uploadFilesForRow', $request->id)
             ->assertHasNoErrors();
@@ -119,7 +119,7 @@ class DataRequestUploadFlowTest extends TestCase
             'input_file' => [
                 [
                     'version' => 1,
-                    'files' => ['uploads/dummy/existing.pdf'],
+                    'files' => ['uploads/dummy/existing.jpg'],
                     'uploaded_at' => now()->subDay()->format('Y-m-d H:i:s'),
                     'uploaded_by' => 'Seeder',
                 ],
@@ -129,7 +129,7 @@ class DataRequestUploadFlowTest extends TestCase
         Livewire::actingAs($auditor)
             ->test(DataRequestTable::class, ['clientId' => $client->id])
             ->set('uploadFiles', [
-                UploadedFile::fake()->create('doc-next.pdf', 120, 'application/pdf'),
+                UploadedFile::fake()->image('img-next.webp')->size(120),
             ])
             ->call('uploadFilesForRow', $request->id)
             ->assertHasNoErrors();

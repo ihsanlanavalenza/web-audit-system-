@@ -12,17 +12,19 @@ use Illuminate\Support\Facades\Mail;
 
 class SendFollowupReminders extends Command
 {
+    private const LEVEL_FIRST = 1;
+    private const LEVEL_SECOND = 2;
+
     protected $signature = 'audit:send-followup';
-    protected $description = 'Kirim email reminder ke auditi & auditor untuk data request yang lewat jatuh tempo';
+    protected $description = 'Kirim email follow-up milestone (7 hari dan 15 hari) ke auditi & auditor';
 
     public function handle(): int
     {
-        $this->info('🔍 Mencari data request yang terlambat...');
+        $this->info('🔍 Mencari data request yang overdue untuk follow-up milestone...');
 
         // Cari data request yang:
         // 1. expected_received sudah lewat jatuh tempo
         // 2. Belum ada file yang diupload (input_file = null atau '[]')
-        // 3. Followup belum dikirim hari ini (agar bisa kirim ulang harian sampai ada upload)
         /** @var \Illuminate\Database\Eloquent\Collection<int, DataRequest> $overdueRequests */
         $overdueRequests = DataRequest::query()->where(function (Builder $q) {
             $q->whereNull('input_file')
@@ -30,10 +32,6 @@ class SendFollowupReminders extends Command
                 ->orWhere('input_file', '')
                 ->orWhere('input_file', 'null');
         })
-            ->where(function (Builder $q) {
-                $q->whereNull('followup_sent_at')
-                    ->orWhere('followup_sent_at', '<', now()->startOfDay());
-            })
             ->whereNotNull('expected_received')
             ->whereDate('expected_received', '<', now()->startOfDay())
             ->where('status', '!=', DataRequest::STATUS_NOT_APPLICABLE)
@@ -48,6 +46,13 @@ class SendFollowupReminders extends Command
         $sent = 0;
         foreach ($overdueRequests as $request) {
             /** @var DataRequest $request */
+            $daysOverdue = max(1, (int) $request->expected_received->startOfDay()->diffInDays(now()->startOfDay()));
+            $followupLevel = $this->resolveFollowupLevel($request, $daysOverdue);
+
+            if ($followupLevel === null) {
+                continue;
+            }
+
             $client = $request->client;
             $kap = $request->kapProfile;
 
@@ -85,36 +90,62 @@ class SendFollowupReminders extends Command
                 continue;
             }
 
-            $daysOverdue = max(1, (int) $request->expected_received->startOfDay()->diffInDays(now()->startOfDay()));
             $sentForRequest = 0;
 
             foreach ($recipientEmails as $recipientEmail) {
                 try {
                     Mail::to($recipientEmail)->send(
                         new FollowupDataRequestMail(
-                            dataRequest: $request,
-                            clientName: $client->nama_client,
-                            kapName: $kap->nama_kap,
-                            daysOverdue: $daysOverdue,
+                            $request,
+                            $client->nama_client,
+                            $kap->nama_kap,
+                            $daysOverdue,
+                            $followupLevel,
                         )
                     );
 
                     $sentForRequest++;
                     $sent++;
 
-                    $this->info("📧 Email dikirim ke {$recipientEmail} untuk request #{$request->no} ({$request->section})");
+                    $this->info("📧 Follow-up level {$followupLevel} dikirim ke {$recipientEmail} untuk request #{$request->no} ({$request->section})");
                 } catch (\Throwable $e) {
                     $this->error("❌ Gagal kirim ke {$recipientEmail}: {$e->getMessage()}");
                 }
             }
 
             if ($sentForRequest > 0) {
-                // Simpan timestamp kirim terakhir agar command tetap idempotent per hari.
-                $request->update(['followup_sent_at' => now()]);
+                $payload = [
+                    'followup_sent_at' => now(),
+                ];
+
+                if ($followupLevel === self::LEVEL_FIRST) {
+                    $payload['followup_7day_sent_at'] = now();
+                }
+
+                if ($followupLevel === self::LEVEL_SECOND) {
+                    $payload['followup_15day_sent_at'] = now();
+                }
+
+                $request->update($payload);
             }
         }
 
         $this->info("✅ Selesai! {$sent} email followup terkirim.");
         return self::SUCCESS;
+    }
+
+    private function resolveFollowupLevel(DataRequest $request, int $daysOverdue): ?int
+    {
+        // If job runs late and request already >=15 days overdue,
+        // send only the highest pending milestone to avoid duplicate reminders in one day.
+        if ($daysOverdue >= 15) {
+            return $request->followup_15day_sent_at ? null : self::LEVEL_SECOND;
+        }
+
+        if ($daysOverdue >= 7) {
+            return $request->followup_7day_sent_at ? null : self::LEVEL_FIRST;
+        }
+
+        return null;
     }
 }

@@ -25,17 +25,27 @@
     </style>
 </head>
 <body>
+    @php
+        $isSecondFollowup = ($followupLevel ?? 1) === 2;
+        $followupLabel = $isSecondFollowup ? 'Follow-up Kedua (15 Hari)' : 'Follow-up Pertama (7 Hari)';
+    @endphp
     <div class="container">
         <div class="card">
             <div class="header">
                 <div class="logo">WA</div>
-                <h1>⏰ Reminder: Data Audit Belum Diterima</h1>
+                <h1>Reminder: Data Audit Belum Diterima</h1>
                 <p class="subtitle">Sistem WebAudit — Client Assistance Schedule</p>
             </div>
 
             <div class="alert">
-                <p class="alert-title">⚠️ Data Request Terlambat {{ $daysOverdue }} Hari</p>
-                <p class="alert-text">Data request berikut telah melewati batas waktu yang ditentukan dan belum diterima. Mohon segera upload dokumen yang diminta.</p>
+                <p class="alert-title">{{ $followupLabel }} - Terlambat {{ $daysOverdue }} Hari</p>
+                <p class="alert-text">
+                    @if ($isSecondFollowup)
+                        Ini adalah pengingat kedua. Data request berikut masih belum diterima setelah melewati batas waktu. Mohon segera upload dokumen yang diminta.
+                    @else
+                        Ini adalah pengingat pertama. Data request berikut telah melewati batas waktu dan belum diterima. Mohon segera upload dokumen yang diminta.
+                    @endif
+                </p>
             </div>
 
             <div class="details">

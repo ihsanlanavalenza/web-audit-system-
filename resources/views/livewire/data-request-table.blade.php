@@ -42,7 +42,7 @@
             </div>
             <p class="text-slate-400 text-sm">Pilih klien terlebih dahulu untuk melihat schedule.</p>
         </div>
-    @elseif(!$requests || $requests->isEmpty())
+    @elseif(!$hasBaseRequests)
         <div class="glass-card p-12 text-center">
             <p class="text-slate-400 text-sm">Belum ada data request untuk klien ini.</p>
         </div>
@@ -273,45 +273,59 @@
                                 $requests instanceof \Illuminate\Pagination\AbstractPaginator
                                     ? collect($requests->items())
                                     : collect($requests);
-                            $sectionCodeSpans = [];
-                            $sectionNoSpans = [];
-                            $accountSpans = [];
-
-                            $i = 0;
-                            while ($i < $items->count()) {
-                                // 1. Group by section_code (e.g. "A")
-                                $codeStart = $i;
-                                $currentCode = $items[$i]->section_code;
-                                $codeCount = 0;
-                                while ($i < $items->count() && $items[$i]->section_code === $currentCode) {
-                                    $codeCount++;
-                                    $i++;
-                                }
-                                $sectionCodeSpans[$codeStart] = $codeCount;
-
-                                // 2. Within section_code, group by section (e.g. "A.1") AND account_process
-                                $j = $codeStart;
-                                while ($j < $codeStart + $codeCount) {
-                                    $noStart = $j;
-                                    $currentNo = $items[$j]->section;
-                                    $currentAccount = $items[$j]->account_process;
-                                    $noCount = 0;
-
-                                    while (
-                                        $j < $codeStart + $codeCount &&
-                                        $items[$j]->section === $currentNo &&
-                                        $items[$j]->account_process === $currentAccount
-                                    ) {
-                                        $noCount++;
-                                        $j++;
-                                    }
-                                    $sectionNoSpans[$noStart] = $noCount;
-                                    $accountSpans[$noStart] = $noCount; // Account merges identically with Section No
-                                }
-                            }
+                            $columnCount = auth()->user()->isAuditor() ? 13 : 12;
                         @endphp
 
-                        @foreach ($items as $idx => $req)
+                        @if ($items->isEmpty())
+                            <tr>
+                                <td colspan="{{ $columnCount }}" class="px-4 py-12 text-center">
+                                    <p class="text-sm text-slate-500">Data tidak ditemukan.</p>
+                                    @if ($isFiltering)
+                                        <p class="mt-1 text-xs text-slate-400">Coba ubah atau bersihkan filter untuk melihat data.</p>
+                                    @endif
+                                </td>
+                            </tr>
+                        @else
+                            @php
+                                $sectionCodeSpans = [];
+                                $sectionNoSpans = [];
+                                $accountSpans = [];
+
+                                $i = 0;
+                                while ($i < $items->count()) {
+                                    // 1. Group by section_code (e.g. "A")
+                                    $codeStart = $i;
+                                    $currentCode = $items[$i]->section_code;
+                                    $codeCount = 0;
+                                    while ($i < $items->count() && $items[$i]->section_code === $currentCode) {
+                                        $codeCount++;
+                                        $i++;
+                                    }
+                                    $sectionCodeSpans[$codeStart] = $codeCount;
+
+                                    // 2. Within section_code, group by section (e.g. "A.1") AND account_process
+                                    $j = $codeStart;
+                                    while ($j < $codeStart + $codeCount) {
+                                        $noStart = $j;
+                                        $currentNo = $items[$j]->section;
+                                        $currentAccount = $items[$j]->account_process;
+                                        $noCount = 0;
+
+                                        while (
+                                            $j < $codeStart + $codeCount &&
+                                            $items[$j]->section === $currentNo &&
+                                            $items[$j]->account_process === $currentAccount
+                                        ) {
+                                            $noCount++;
+                                            $j++;
+                                        }
+                                        $sectionNoSpans[$noStart] = $noCount;
+                                        $accountSpans[$noStart] = $noCount; // Account merges identically with Section No
+                                    }
+                                }
+                            @endphp
+
+                            @foreach ($items as $idx => $req)
                             <tr wire:key="req-{{ $req->id }}">
                                 {{-- Section Code column (e.g. "A") --}}
                                 @if (isset($sectionCodeSpans[$idx]))
@@ -439,9 +453,40 @@
                                                 <div x-data="{ uploading: false }"
                                                     class="mt-3 pt-3 border-t border-slate-200">
                                                     <input type="file" wire:model="uploadFiles" multiple
+                                                        accept=".jpg,.jpeg,.png,.webp"
+                                                        x-on:change="
+                                                            const files = Array.from($event.target.files || []);
+                                                            if (!files.length) return;
+
+                                                            const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+                                                            const maxPerFile = 10 * 1024 * 1024;
+                                                            const maxTotal = 50 * 1024 * 1024;
+                                                            let totalSize = 0;
+
+                                                            for (const file of files) {
+                                                                totalSize += file.size;
+
+                                                                if (!allowed.includes(file.type)) {
+                                                                    $wire.set('uploadError', 'Format file \"' + file.name + '\" tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.');
+                                                                    $event.target.value = '';
+                                                                    return;
+                                                                }
+
+                                                                if (file.size > maxPerFile) {
+                                                                    $wire.set('uploadError', 'Ukuran file \"' + file.name + '\" terlalu besar. Maksimal 10MB per file.');
+                                                                    $event.target.value = '';
+                                                                    return;
+                                                                }
+                                                            }
+
+                                                            if (totalSize > maxTotal) {
+                                                                $wire.set('uploadError', 'Total ukuran file melebihi 50MB. Kurangi jumlah file lalu coba lagi.');
+                                                                $event.target.value = '';
+                                                            }
+                                                        "
                                                         x-on:livewire-upload-start="uploading = true; $wire.set('uploadError', null)"
                                                         x-on:livewire-upload-finish="uploading = false; $wire.uploadFilesForRow({{ $req->id }})"
-                                                        x-on:livewire-upload-error="uploading = false; $wire.set('uploadError', 'Upload gagal. Periksa ukuran file/server limit lalu coba lagi.')"
+                                                        x-on:livewire-upload-error="uploading = false; $wire.set('uploadError', 'Upload gagal. Pastikan format JPG/JPEG/PNG/WEBP dan ukuran maksimal 10MB per file.')"
                                                         class="hidden" id="file-add-{{ $req->id }}">
                                                     <label for="file-add-{{ $req->id }}"
                                                         class="cursor-pointer inline-flex flex-wrap justify-center items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition font-medium w-full">
@@ -468,9 +513,40 @@
                                                             diupload</span>
                                                     </div>
                                                     <input type="file" wire:model="uploadFiles" multiple
+                                                        accept=".jpg,.jpeg,.png,.webp"
+                                                        x-on:change="
+                                                            const files = Array.from($event.target.files || []);
+                                                            if (!files.length) return;
+
+                                                            const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+                                                            const maxPerFile = 10 * 1024 * 1024;
+                                                            const maxTotal = 50 * 1024 * 1024;
+                                                            let totalSize = 0;
+
+                                                            for (const file of files) {
+                                                                totalSize += file.size;
+
+                                                                if (!allowed.includes(file.type)) {
+                                                                    $wire.set('uploadError', 'Format file \"' + file.name + '\" tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.');
+                                                                    $event.target.value = '';
+                                                                    return;
+                                                                }
+
+                                                                if (file.size > maxPerFile) {
+                                                                    $wire.set('uploadError', 'Ukuran file \"' + file.name + '\" terlalu besar. Maksimal 10MB per file.');
+                                                                    $event.target.value = '';
+                                                                    return;
+                                                                }
+                                                            }
+
+                                                            if (totalSize > maxTotal) {
+                                                                $wire.set('uploadError', 'Total ukuran file melebihi 50MB. Kurangi jumlah file lalu coba lagi.');
+                                                                $event.target.value = '';
+                                                            }
+                                                        "
                                                         x-on:livewire-upload-start="uploading = true; $wire.set('uploadError', null)"
                                                         x-on:livewire-upload-finish="uploading = false; $wire.uploadFilesForRow({{ $req->id }})"
-                                                        x-on:livewire-upload-error="uploading = false; $wire.set('uploadError', 'Upload gagal. Periksa ukuran file/server limit lalu coba lagi.')"
+                                                        x-on:livewire-upload-error="uploading = false; $wire.set('uploadError', 'Upload gagal. Pastikan format JPG/JPEG/PNG/WEBP dan ukuran maksimal 10MB per file.')"
                                                         class="hidden" id="file-{{ $req->id }}">
                                                     <label for="file-{{ $req->id }}"
                                                         class="cursor-pointer flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium w-full">
@@ -591,7 +667,8 @@
                                     </td>
                                 @endif
                             </tr>
-                        @endforeach
+                            @endforeach
+                        @endif
                     </tbody>
                 </table>
             </div>

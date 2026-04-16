@@ -11,6 +11,7 @@ use App\Notifications\DataRequestRevisionNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -59,6 +60,10 @@ class DataRequestTable extends Component
     public ?string $filterDateInputFrom = null;
     public ?string $filterDateInputTo = null;
     public string $filterInputFileState = '';
+
+    private const MAX_UPLOAD_FILE_KB = 10240;
+    private const MAX_UPLOAD_FILES_PER_REQUEST = 10;
+    private const MAX_UPLOAD_TOTAL_BYTES = 52428800; // 50 MB
 
     public function mount(?int $clientId = null)
     {
@@ -230,8 +235,17 @@ class DataRequestTable extends Component
         $this->uploadError = null;
 
         $this->validate([
-            'uploadFiles' => 'required|array|min:1',
-            'uploadFiles.*' => 'required|file|max:10240',
+            'uploadFiles' => 'required|array|min:1|max:' . self::MAX_UPLOAD_FILES_PER_REQUEST,
+            'uploadFiles.*' => 'required|file|mimes:jpg,jpeg,png,webp|max:' . self::MAX_UPLOAD_FILE_KB,
+        ], [
+            'uploadFiles.required' => 'Pilih minimal satu file untuk diunggah.',
+            'uploadFiles.array' => 'Format upload file tidak valid.',
+            'uploadFiles.min' => 'Pilih minimal satu file untuk diunggah.',
+            'uploadFiles.max' => 'Maksimal ' . self::MAX_UPLOAD_FILES_PER_REQUEST . ' file per upload.',
+            'uploadFiles.*.required' => 'Ada file yang tidak valid. Pilih ulang file Anda.',
+            'uploadFiles.*.file' => 'File yang dipilih tidak valid.',
+            'uploadFiles.*.mimes' => 'Format file tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.',
+            'uploadFiles.*.max' => 'Ukuran file terlalu besar. Maksimal 10MB per file.',
         ]);
 
         $files = is_array($this->uploadFiles) ? $this->uploadFiles : [$this->uploadFiles];
@@ -240,6 +254,17 @@ class DataRequestTable extends Component
         if (count($files) === 0) {
             $this->uploadError = 'Tidak ada file yang dipilih untuk diunggah.';
             session()->flash('error', 'Tidak ada file yang dipilih untuk diunggah.');
+            return;
+        }
+
+        $totalSize = 0;
+        foreach ($files as $file) {
+            $totalSize += (int) $file->getSize();
+        }
+
+        if ($totalSize > self::MAX_UPLOAD_TOTAL_BYTES) {
+            $this->uploadError = 'Total ukuran file melebihi 50MB. Kurangi jumlah file lalu coba lagi.';
+            session()->flash('error', $this->uploadError);
             return;
         }
 
@@ -309,11 +334,15 @@ class DataRequestTable extends Component
 
             $this->expandedFileRow = null;
             session()->flash('success', count($newPaths) . ' file berhasil diupload sebagai versi ' . $nextVersionNumber . '! Status berubah ke On Review.');
+        } catch (ValidationException $e) {
+            $message = (string) ($e->validator->errors()->first() ?? 'Validasi upload gagal.');
+            $this->uploadError = $message;
+            session()->flash('error', $message);
         } catch (\Throwable $e) {
             report($e);
 
             $this->uploadError = 'Upload gagal diproses di server. Coba lagi atau hubungi admin.';
-            session()->flash('error', 'Upload file gagal diproses. Periksa ukuran file dan coba lagi.');
+            session()->flash('error', $this->uploadError);
         } finally {
             $this->uploadFiles = [];
         }
@@ -520,6 +549,20 @@ class DataRequestTable extends Component
         return $invitation?->kap_id;
     }
 
+    private function hasActiveFilters(): bool
+    {
+        return trim($this->filterSectionNo) !== ''
+            || trim($this->filterAccountProcess) !== ''
+            || !empty($this->filterStatuses)
+            || !empty($this->filterRequestDateFrom)
+            || !empty($this->filterRequestDateTo)
+            || !empty($this->filterExpectedReceivedFrom)
+            || !empty($this->filterExpectedReceivedTo)
+            || !empty($this->filterDateInputFrom)
+            || !empty($this->filterDateInputTo)
+            || trim($this->filterInputFileState) !== '';
+    }
+
     public function exportCsv()
     {
         $this->authorizeClientAccess();
@@ -569,6 +612,7 @@ class DataRequestTable extends Component
     {
         $this->authorizeClientAccess();
 
+        $hasBaseRequests = false;
         $requests = $this->clientId
             ? $this->getQuery()
             ->orderBy('section_code')
@@ -576,6 +620,12 @@ class DataRequestTable extends Component
             ->orderBy('no')
             ->get()
             : collect();
+
+        if ($this->clientId) {
+            $hasBaseRequests = DataRequest::query()
+                ->where('client_id', $this->clientId)
+                ->exists();
+        }
 
         $clients = [];
         /** @var User|null $user */
@@ -588,6 +638,8 @@ class DataRequestTable extends Component
             'requests' => $requests,
             'clients' => $clients,
             'statuses' => DataRequest::STATUSES,
+            'hasBaseRequests' => $hasBaseRequests,
+            'isFiltering' => $this->hasActiveFilters(),
         ]);
     }
 }
