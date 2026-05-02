@@ -17,6 +17,8 @@ class InviteManager extends Component
     public string $role = 'auditi';
     public ?int $client_id = null;
     public bool $showModal = false;
+    public ?string $message = null;
+    public ?string $messageType = null; // 'success' or 'error'
 
     public function openModal()
     {
@@ -31,8 +33,9 @@ class InviteManager extends Component
         $user = Auth::user();
         $kap = $user?->kapProfile;
         if (!$kap) {
-            session()->flash('error', 'Silakan isi Profil KAP terlebih dahulu.');
-            return redirect()->route('kap-profile');
+            $this->message = 'Silakan isi Profil KAP terlebih dahulu.';
+            $this->messageType = 'error';
+            return;
         }
 
         $this->validate([
@@ -58,23 +61,31 @@ class InviteManager extends Component
             ->exists();
 
         if ($duplicatePendingInvite) {
-            session()->flash('error', 'Undangan aktif untuk email dan scope yang sama sudah ada.');
+            $this->message = 'Undangan aktif untuk email dan scope yang sama sudah ada.';
+            $this->messageType = 'error';
             return;
         }
 
-        $invitation = Invitation::create([
-            'kap_id' => $kap->id,
-            'client_id' => $this->client_id,
-            'email' => $normalizedEmail,
-            'role' => $this->role,
-            'token' => Invitation::generateToken(),
-            'expires_at' => now()->addDays(7),
-        ]);
+        try {
+            $invitation = Invitation::create([
+                'kap_id' => $kap->id,
+                'client_id' => $this->client_id,
+                'email' => $normalizedEmail,
+                'role' => $this->role,
+                'token' => Invitation::generateToken(),
+                'expires_at' => now()->addDays(7),
+            ]);
 
-        Mail::to($invitation->email)->send(new InvitationMail($invitation));
+            Mail::to($invitation->email)->send(new InvitationMail($invitation));
 
-        $this->showModal = false;
-        session()->flash('success', 'Undangan berhasil dibuat dan email telah dikirim.');
+            $this->message = 'Undangan berhasil dibuat dan email telah dikirim.';
+            $this->messageType = 'success';
+            $this->showModal = false;
+            $this->reset(['email', 'role', 'client_id']);
+        } catch (\Exception $e) {
+            $this->message = 'Gagal membuat undangan: ' . $e->getMessage();
+            $this->messageType = 'error';
+        }
     }
 
     public function deleteInvitation(int $id)
@@ -87,7 +98,8 @@ class InviteManager extends Component
         }
 
         $kap->invitations()->findOrFail($id)->delete();
-        session()->flash('success', 'Undangan berhasil dihapus!');
+        $this->message = 'Undangan berhasil dihapus!';
+        $this->messageType = 'success';
     }
 
     #[Layout('layouts.app')]

@@ -7,6 +7,13 @@
         <button wire:click="openModal" class="btn-auditor text-sm" id="btn-invite">+ Buat Undangan</button>
     </div>
 
+    {{-- Success/Error Messages --}}
+    @if ($message)
+        <div class="mb-6 rounded-lg border {{ $messageType === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700' }} px-4 py-3 text-sm">
+            {{ $message }}
+        </div>
+    @endif
+
     {{-- Invitations Table --}}
     @if ($invitations->count() > 0)
         <div class="glass-card overflow-hidden">
@@ -77,24 +84,32 @@
         <div class="modal-overlay" wire:click.self="$set('showModal', false)">
             <div class="modal-content p-8">
                 <h3 class="text-lg font-bold mb-6 text-slate-900">Buat Undangan Baru</h3>
-                <form wire:submit="sendInvite" class="space-y-4">
+                <form wire:submit.prevent="sendInvite" class="space-y-4">
+                    @if ($message)
+                        <div class="rounded-lg border {{ $messageType === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700' }} px-4 py-3 text-sm">
+                            {{ $message }}
+                        </div>
+                    @endif
                     <div>
                         <label class="form-label">Email</label>
-                        <input wire:model="email" type="email" class="form-input" placeholder="email@contoh.com">
+                        <input wire:model.blur="email" type="email" class="form-input @error('email') border-red-500 @enderror" placeholder="email@contoh.com">
                         @error('email')
                             <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
                         <label class="form-label">Peran</label>
-                        <select wire:model.live="role" class="form-input">
+                        <select wire:model.live="role" class="form-input @error('role') border-red-500 @enderror">
                             <option value="auditor">🔵 Auditor</option>
                             <option value="auditi">🔴 Auditi</option>
                         </select>
+                        @error('role')
+                            <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
                         <label class="form-label">Klien (akses {{ $role === 'auditor' ? 'Auditor' : 'Auditi' }})</label>
-                        <select wire:model="client_id" class="form-input">
+                        <select wire:model.live="client_id" class="form-input @error('client_id') border-red-500 @enderror">
                             <option value="">-- Pilih Klien --</option>
                             @foreach ($clients as $client)
                                 <option value="{{ $client->id }}">{{ $client->nama_client }}</option>
@@ -105,7 +120,10 @@
                         @enderror
                     </div>
                     <div class="flex gap-3 pt-2">
-                        <button type="submit" class="btn-auditor">Buat Undangan</button>
+                        <button type="submit" wire:loading.attr="disabled" class="btn-auditor">
+                            <span wire:loading.remove>Buat Undangan</span>
+                            <span wire:loading>Mengirim...</span>
+                        </button>
                         <button type="button" wire:click="$set('showModal', false)" class="btn-ghost">Batal</button>
                     </div>
                 </form>
