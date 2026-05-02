@@ -9,7 +9,8 @@
 
     {{-- Success/Error Messages --}}
     @if ($message)
-        <div class="mb-6 rounded-lg border {{ $messageType === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700' }} px-4 py-3 text-sm">
+        <div
+            class="mb-6 rounded-lg border {{ $messageType === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700' }} px-4 py-3 text-sm">
             {{ $message }}
         </div>
     @endif
@@ -86,13 +87,15 @@
                 <h3 class="text-lg font-bold mb-6 text-slate-900">Buat Undangan Baru</h3>
                 <form wire:submit.prevent="sendInvite" class="space-y-4">
                     @if ($message)
-                        <div class="rounded-lg border {{ $messageType === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700' }} px-4 py-3 text-sm">
+                        <div
+                            class="rounded-lg border {{ $messageType === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700' }} px-4 py-3 text-sm">
                             {{ $message }}
                         </div>
                     @endif
                     <div>
                         <label class="form-label">Email</label>
-                        <input wire:model.blur="email" type="email" class="form-input @error('email') border-red-500 @enderror" placeholder="email@contoh.com">
+                        <input wire:model.blur="email" type="email"
+                            class="form-input @error('email') border-red-500 @enderror" placeholder="email@contoh.com">
                         @error('email')
                             <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -108,8 +111,10 @@
                         @enderror
                     </div>
                     <div>
-                        <label class="form-label">Klien (akses {{ $role === 'auditor' ? 'Auditor' : 'Auditi' }})</label>
-                        <select wire:model.live="client_id" class="form-input @error('client_id') border-red-500 @enderror">
+                        <label class="form-label">Klien (akses
+                            {{ $role === 'auditor' ? 'Auditor' : 'Auditi' }})</label>
+                        <select wire:model.live="client_id"
+                            class="form-input @error('client_id') border-red-500 @enderror">
                             <option value="">-- Pilih Klien --</option>
                             @foreach ($clients as $client)
                                 <option value="{{ $client->id }}">{{ $client->nama_client }}</option>
