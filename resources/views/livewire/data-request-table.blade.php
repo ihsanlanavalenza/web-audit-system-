@@ -59,7 +59,7 @@
                 <table class="data-table schedule-table">
                     <thead>
                         <tr>
-                            <th class="w-24" colspan="2">
+                            <th class="w-40" colspan="2">
                                 <div class="th-filter">
                                     <span>Section / No.</span>
                                     <button type="button"
