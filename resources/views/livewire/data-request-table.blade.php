@@ -471,13 +471,13 @@
                                                                 totalSize += file.size;
 
                                                                 if (!allowed.includes(file.type)) {
-                                                                    $wire.set('uploadError', 'Format file \"' + file.name + '\" tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.');
+                                                                    $wire.set('uploadError', `Format file '${file.name}' tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.`);
                                                                     $event.target.value = '';
                                                                     return;
                                                                 }
 
                                                                 if (file.size > maxPerFile) {
-                                                                    $wire.set('uploadError', 'Ukuran file \"' + file.name + '\" terlalu besar. Maksimal 10MB per file.');
+                                                                    $wire.set('uploadError', `Ukuran file '${file.name}' terlalu besar. Maksimal 10MB per file.`);
                                                                     $event.target.value = '';
                                                                     return;
                                                                 }
@@ -533,13 +533,13 @@
                                                                 totalSize += file.size;
 
                                                                 if (!allowed.includes(file.type)) {
-                                                                    $wire.set('uploadError', 'Format file \"' + file.name + '\" tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.');
+                                                                    $wire.set('uploadError', `Format file '${file.name}' tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.`);
                                                                     $event.target.value = '';
                                                                     return;
                                                                 }
 
                                                                 if (file.size > maxPerFile) {
-                                                                    $wire.set('uploadError', 'Ukuran file \"' + file.name + '\" terlalu besar. Maksimal 10MB per file.');
+                                                                    $wire.set('uploadError', `Ukuran file '${file.name}' terlalu besar. Maksimal 10MB per file.`);
                                                                     $event.target.value = '';
                                                                     return;
                                                                 }
