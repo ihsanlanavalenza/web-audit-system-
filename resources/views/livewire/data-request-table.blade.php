@@ -472,20 +472,20 @@
 
                                                                 if (!allowed.includes(file.type)) {
                                                                     $wire.set('uploadError', `Format file '${file.name}' tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.`);
-                                                                    $event.target.value = '';
+                                                                    $event
                                                                     return;
                                                                 }
 
                                                                 if (file.size > maxPerFile) {
                                                                     $wire.set('uploadError', `Ukuran file '${file.name}' terlalu besar. Maksimal 10MB per file.`);
-                                                                    $event.target.value = '';
+                                                                    $event
                                                                     return;
                                                                 }
                                                             }
 
                                                             if (totalSize > maxTotal) {
                                                                 $wire.set('uploadError', 'Total ukuran file melebihi 50MB. Kurangi jumlah file lalu coba lagi.');
-                                                                $event.target.value = '';
+                                                                $event
                                                             }
                                                         "
                                                             x-on:livewire-upload-start="uploading = true; $wire.set('uploadError', null)"
@@ -534,20 +534,20 @@
 
                                                                 if (!allowed.includes(file.type)) {
                                                                     $wire.set('uploadError', `Format file '${file.name}' tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.`);
-                                                                    $event.target.value = '';
+                                                                    $event
                                                                     return;
                                                                 }
 
                                                                 if (file.size > maxPerFile) {
                                                                     $wire.set('uploadError', `Ukuran file '${file.name}' terlalu besar. Maksimal 10MB per file.`);
-                                                                    $event.target.value = '';
+                                                                    $event
                                                                     return;
                                                                 }
                                                             }
 
                                                             if (totalSize > maxTotal) {
                                                                 $wire.set('uploadError', 'Total ukuran file melebihi 50MB. Kurangi jumlah file lalu coba lagi.');
-                                                                $event.target.value = '';
+                                                                $event
                                                             }
                                                         "
                                                             x-on:livewire-upload-start="uploading = true; $wire.set('uploadError', null)"

@@ -76,9 +76,14 @@ class InviteManager extends Component
                 'expires_at' => now()->addDays(7),
             ]);
 
-            Mail::to($invitation->email)->send(new InvitationMail($invitation));
+            try {
+                Mail::to($invitation->email)->send(new InvitationMail($invitation));
+                $this->message = 'Undangan berhasil dibuat dan email telah dikirim.';
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Gagal mengirim email undangan: ' . $e->getMessage());
+                $this->message = 'Undangan berhasil dibuat, tapi email gagal dikirim. Anda dapat membagikan link secara manual.';
+            }
 
-            $this->message = 'Undangan berhasil dibuat dan email telah dikirim.';
             $this->messageType = 'success';
             $this->showModal = false;
             $this->reset(['email', 'role', 'client_id']);

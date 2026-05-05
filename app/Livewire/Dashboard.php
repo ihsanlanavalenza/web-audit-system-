@@ -16,6 +16,15 @@ class Dashboard extends Component
         /** @var User|null $user */
         $user = Auth::user();
 
+        if ($user && request()->has('token')) {
+            $invitation = Invitation::where('token', request('token'))->first();
+            if ($invitation && $invitation->isPending()) {
+                Invitation::acceptForUser($user, $invitation);
+                session()->flash('success', 'Undangan berhasil diterima.');
+                return $this->redirect(route('dashboard'), navigate: false);
+            }
+        }
+
         // Super Admin → redirect ke admin dashboard
         if ($user && $user->isSuperAdmin()) {
             return $this->redirect(route('admin.dashboard'), navigate: false);
