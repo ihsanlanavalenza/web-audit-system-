@@ -107,10 +107,13 @@ Setelah workflow pertama sukses, verifikasi:
 cd /home/auditinm/web-audit-system-
 php artisan migrate --force
 php artisan storage:link
+php artisan config:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
+
+Setelah update/deploy berikutnya, jalankan kembali `php artisan config:clear` lalu `php artisan config:cache`.
 
 Opsional untuk validasi koneksi DB:
 
@@ -134,6 +137,12 @@ Di cPanel -> Cron Jobs, tambahkan:
 
 ```bash
 * * * * * /usr/local/bin/php /home/auditinm/web-audit-system-/artisan queue:work --queue=mail,default --tries=5 --backoff=60 --timeout=120 --stop-when-empty >> /dev/null 2>&1
+```
+
+Pastikan kedua cron aktif. Uji followup manual:
+
+```bash
+php artisan audit:send-followup
 ```
 
 ## 6) Uji Auto Deploy dari Push Pertama ke `main`
