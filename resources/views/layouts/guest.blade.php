@@ -6,13 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'WebAudit' }} — Client Assistance Schedule</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap"
         rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     <style>
         * {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-ui, "Space Grotesk", sans-serif);
         }
     </style>
 </head>
@@ -23,12 +25,15 @@
         <div class="w-full max-w-md">
             {{-- Logo --}}
             <div class="text-center mb-8">
-                <div
-                    class="w-16 h-16 rounded-2xl bg-linear-to-br from-blue-600 to-blue-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
-                    <span class="text-white font-bold text-xl">WA</span>
+                <div class="brand-mark brand-mark--lg mx-auto mb-4" aria-hidden="true">
+                    <svg class="brand-icon" viewBox="0 0 36 36">
+                        <rect x="6" y="14" width="6" height="16" rx="3" />
+                        <rect x="15" y="9" width="6" height="21" rx="3" />
+                        <rect x="24" y="17" width="6" height="13" rx="3" />
+                    </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-slate-900">WebAudit</h1>
-                <p class="text-sm text-slate-500 mt-1">Client Assistance Schedule</p>
+                <h1 class="brand-title text-2xl">WebAudit</h1>
+                <p class="brand-subtitle mt-2">Client Assistance Schedule</p>
             </div>
 
             {{-- Content Card --}}

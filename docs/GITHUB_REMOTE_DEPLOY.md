@@ -43,6 +43,15 @@ DB_USERNAME=auditinm_dbuser
 DB_PASSWORD=isi-password-db-di-server
 
 QUEUE_CONNECTION=database
+
+MAIL_MAILER=smtp
+MAIL_SCHEME=tls
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_FROM_ADDRESS=no-reply@your-domain.com
+MAIL_FROM_NAME="WebAudit"
 ```
 
 Catatan keamanan:

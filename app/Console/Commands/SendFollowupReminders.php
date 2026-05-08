@@ -6,9 +6,11 @@ use App\Mail\FollowupDataRequestMail;
 use App\Models\DataRequest;
 use App\Models\Invitation;
 use App\Models\User;
+use App\Notifications\DataRequestOverdueNotification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 
 class SendFollowupReminders extends Command
 {
@@ -85,9 +87,26 @@ class SendFollowupReminders extends Command
                 ->unique()
                 ->values();
 
+            $recipientUsers = User::query()
+                ->whereIn('email', $recipientEmails->all())
+                ->get();
+
             if ($recipientEmails->isEmpty()) {
                 $this->warn("⚠️ Tidak ada penerima aktif untuk client '{$client->nama_client}', skipping.");
                 continue;
+            }
+
+            if ($recipientUsers->isNotEmpty()) {
+                Notification::send(
+                    $recipientUsers,
+                    new DataRequestOverdueNotification(
+                        dataRequest: $request,
+                        daysOverdue: $daysOverdue,
+                        followupLevel: $followupLevel,
+                        clientName: $client->nama_client,
+                        kapName: $kap->nama_kap,
+                    )
+                );
             }
 
             $sentForRequest = 0;

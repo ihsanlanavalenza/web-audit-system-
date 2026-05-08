@@ -7,13 +7,15 @@
     <meta name="description" content="WebAudit - Client Assistance Schedule">
     <title>{{ $title ?? 'WebAudit' }} — Client Assistance Schedule</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap"
         rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     <style>
         * {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-ui, "Space Grotesk", sans-serif);
         }
     </style>
 </head>
@@ -35,13 +37,16 @@
                 {{-- Logo --}}
                 <div class="mb-8 px-2">
                     <div class="flex items-center gap-3">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-linear-to-br from-blue-600 to-blue-400 flex items-center justify-center font-bold text-sm text-white shadow-md">
-                            WA
+                        <div class="brand-mark brand-mark--lg" aria-hidden="true">
+                            <svg class="brand-icon" viewBox="0 0 36 36">
+                                <rect x="6" y="14" width="6" height="16" rx="3" />
+                                <rect x="15" y="9" width="6" height="21" rx="3" />
+                                <rect x="24" y="17" width="6" height="13" rx="3" />
+                            </svg>
                         </div>
                         <div>
-                            <h1 class="text-base font-bold tracking-tight text-slate-900">WebAudit</h1>
-                            <p class="text-xs text-slate-400">Client Assistance</p>
+                            <h1 class="brand-title text-base">WebAudit</h1>
+                            <p class="brand-subtitle">Client Assistance Schedule</p>
                         </div>
                     </div>
                 </div>
@@ -207,10 +212,17 @@
                         </svg>
                     </button>
                     <div class="flex items-center gap-2">
-                        <div
-                            class="w-7 h-7 rounded-lg bg-linear-to-br from-blue-600 to-blue-400 flex items-center justify-center font-bold text-xs text-white">
-                            WA</div>
-                        <span class="font-semibold text-sm text-slate-900">WebAudit</span>
+                        <div class="brand-mark brand-mark--sm" aria-hidden="true">
+                            <svg class="brand-icon" viewBox="0 0 36 36">
+                                <rect x="6" y="14" width="6" height="16" rx="3" />
+                                <rect x="15" y="9" width="6" height="21" rx="3" />
+                                <rect x="24" y="17" width="6" height="13" rx="3" />
+                            </svg>
+                        </div>
+                        <div class="leading-tight">
+                            <div class="brand-title text-sm">WebAudit</div>
+                            <div class="brand-subtitle">Client Assistance</div>
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -226,7 +238,20 @@
             <main class="flex-1 lg:ml-64">
                 {{-- Topbar Desktop --}}
                 <div
-                    class="hidden lg:flex items-center justify-end px-8 py-3 bg-white/50 backdrop-blur-md border-b border-slate-100/50 sticky top-0 z-20">
+                    class="hidden lg:flex items-center justify-between px-8 py-3 bg-white/50 backdrop-blur-md border-b border-slate-100/50 sticky top-0 z-20">
+                    <div class="flex items-center gap-3">
+                        <div class="brand-mark brand-mark--xs" aria-hidden="true">
+                            <svg class="brand-icon" viewBox="0 0 36 36">
+                                <rect x="6" y="14" width="6" height="16" rx="3" />
+                                <rect x="15" y="9" width="6" height="21" rx="3" />
+                                <rect x="24" y="17" width="6" height="13" rx="3" />
+                            </svg>
+                        </div>
+                        <div class="leading-tight">
+                            <div class="header-title">{{ $title ?? 'Dashboard' }}</div>
+                            <div class="header-subtitle">Client Assistance Schedule</div>
+                        </div>
+                    </div>
                     <div class="flex items-center gap-4">
                         <livewire:notification-bell />
                         <div class="text-sm font-medium text-slate-700">{{ auth()->user()->name }}</div>

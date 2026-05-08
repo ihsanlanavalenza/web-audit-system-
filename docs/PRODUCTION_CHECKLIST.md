@@ -27,6 +27,13 @@ Set production values in server environment:
 - `DB_USERNAME=auditinm_dbuser`
 - `DB_PASSWORD=<set-on-server-only>`
 - `MAIL_MAILER=smtp`
+- `MAIL_SCHEME=tls`
+- `MAIL_HOST=smtp.gmail.com` (atau provider Anda)
+- `MAIL_PORT=587`
+- `MAIL_USERNAME=<smtp-user>`
+- `MAIL_PASSWORD=<smtp-password>`
+- `MAIL_FROM_ADDRESS=no-reply@your-domain.com`
+- `MAIL_FROM_NAME=WebAudit`
 - `QUEUE_CONNECTION=database` (or redis)
 - `UPLOAD_MAX_FILESIZE >= 10M`, `POST_MAX_SIZE >= 20M`, dan `MAX_FILE_UPLOADS >= 10` (sesuai kebutuhan multi-file)
 

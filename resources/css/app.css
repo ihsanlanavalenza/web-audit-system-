@@ -22,6 +22,16 @@
     --color-border-light: #f1f5f9;
 }
 
+:root {
+    --font-ui: "Space Grotesk", sans-serif;
+    --font-display: "Fraunces", serif;
+    --color-brand-ink: #0b1220;
+    --color-brand-sky: #0ea5e9;
+    --color-brand-mint: #22c55e;
+    --color-brand-ember: #f59e0b;
+    --color-brand-cream: #fff7ed;
+}
+
 [x-cloak] {
     display: none !important;
 }
@@ -32,7 +42,103 @@ body {
     background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
     background-size: 24px 24px;
     color: #0f172a;
+    font-family: var(--font-ui);
     min-height: 100vh;
+}
+
+/* ---- Brand Lockup ---- */
+.brand-mark {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.9rem;
+    background: radial-gradient(circle at 25% 25%, var(--color-brand-cream), transparent 45%),
+        linear-gradient(135deg, var(--color-brand-ember), var(--color-brand-sky) 55%, var(--color-brand-ink));
+    display: grid;
+    place-items: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 28px -16px rgba(15, 23, 42, 0.65),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    animation: brand-rise 0.6s ease-out both;
+}
+
+.brand-mark::after {
+    content: "";
+    position: absolute;
+    inset: -35% 40% 40% -35%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.45), transparent 70%);
+    opacity: 0.75;
+    transform: rotate(25deg);
+}
+
+.brand-mark--lg {
+    width: 3rem;
+    height: 3rem;
+}
+
+.brand-mark--sm {
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 0.7rem;
+}
+
+.brand-mark--xs {
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 0.6rem;
+}
+
+.brand-icon {
+    width: 1.3rem;
+    height: 1.3rem;
+    fill: rgba(255, 255, 255, 0.92);
+    z-index: 1;
+}
+
+.brand-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-brand-ink);
+}
+
+.brand-subtitle {
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.header-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-brand-ink);
+}
+
+.header-subtitle {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+@keyframes brand-rise {
+    from {
+        transform: translateY(6px) scale(0.98);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .brand-mark {
+        animation: none;
+    }
 }
 
 /* ---- Clean White Card ---- */
