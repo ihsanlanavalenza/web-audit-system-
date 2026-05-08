@@ -104,17 +104,17 @@ Artisan::command('audit:list-cms', function () {
 
     $livewireComponents = File::exists($livewirePath)
         ? collect(File::allFiles($livewirePath))
-            ->map(fn($file) => $toClassName($file->getPathname()))
-            ->sort()
-            ->values()
+        ->map(fn($file) => $toClassName($file->getPathname()))
+        ->sort()
+        ->values()
         : collect();
 
     $controllers = File::exists($controllerPath)
         ? collect(File::allFiles($controllerPath))
-            ->map(fn($file) => $toClassName($file->getPathname()))
-            ->reject(fn($class) => $class === 'App\\Http\\Controllers\\Controller')
-            ->sort()
-            ->values()
+        ->map(fn($file) => $toClassName($file->getPathname()))
+        ->reject(fn($class) => $class === 'App\\Http\\Controllers\\Controller')
+        ->sort()
+        ->values()
         : collect();
 
     $this->info('CMS Livewire components (' . $livewireComponents->count() . ')');
@@ -141,17 +141,17 @@ Artisan::command('audit:check-cms', function () {
 
     $livewireComponents = File::exists($livewirePath)
         ? collect(File::allFiles($livewirePath))
-            ->map(fn($file) => $toClassName($file->getPathname()))
-            ->sort()
-            ->values()
+        ->map(fn($file) => $toClassName($file->getPathname()))
+        ->sort()
+        ->values()
         : collect();
 
     $controllers = File::exists($controllerPath)
         ? collect(File::allFiles($controllerPath))
-            ->map(fn($file) => $toClassName($file->getPathname()))
-            ->reject(fn($class) => $class === 'App\\Http\\Controllers\\Controller')
-            ->sort()
-            ->values()
+        ->map(fn($file) => $toClassName($file->getPathname()))
+        ->reject(fn($class) => $class === 'App\\Http\\Controllers\\Controller')
+        ->sort()
+        ->values()
         : collect();
 
     $missingLivewire = $livewireComponents->filter(fn($class) => !class_exists($class))->values();
