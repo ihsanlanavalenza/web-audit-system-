@@ -1,0 +1,54 @@
+name: CMS Health Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * *"
+  push:
+    branches:
+      - main
+
+jobs:
+  cms_health:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, bcmath, xml, ctype, json, tokenizer, pdo, pdo_sqlite
+
+      - name: Prepare Laravel env
+        run: |
+          cp .env.example .env
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+      - name: CMS health check
+        run: php artisan audit:check-cms
+
+      - name: Send email notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.CMS_SMTP_HOST }}
+          server_port: ${{ secrets.CMS_SMTP_PORT }}
+          username: ${{ secrets.CMS_SMTP_USERNAME }}
+          password: ${{ secrets.CMS_SMTP_PASSWORD }}
+          subject: "CMS pipeline ${{ job.status }} - ${{ github.repository }}"
+          to: ${{ secrets.CMS_MAIL_TO }}
+          from: ${{ secrets.CMS_MAIL_FROM }}
+          body: |
+            Workflow: ${{ github.workflow }}
+            Status: ${{ job.status }}
+            Repo: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

@@ -297,6 +297,8 @@ jobs:
               "$PHP_BIN" artisan migrate --force
               "$PHP_BIN" artisan db:seed --class=Database\\Seeders\\SuperAdminSeeder --force
               "$PHP_BIN" artisan config:cache
+              chmod -R ug+rwX "$APP_DIR/storage" "$APP_DIR/bootstrap/cache" || true
+              "$PHP_BIN" artisan storage:link || true
 
               if ! "$PHP_BIN" artisan route:cache; then
                 echo "route:cache skipped (closure routes detected)."

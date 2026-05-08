@@ -128,6 +128,70 @@ Artisan::command('audit:list-cms', function () {
     }
 })->purpose('List Livewire CMS components and HTTP controllers.');
 
+Artisan::command('audit:check-cms', function () {
+    $toClassName = function (string $path): string {
+        $relative = str_replace(app_path() . DIRECTORY_SEPARATOR, '', $path);
+        $relative = str_replace('.php', '', $relative);
+        $relative = str_replace(DIRECTORY_SEPARATOR, '\\', $relative);
+        return 'App\\' . $relative;
+    };
+
+    $livewirePath = app_path('Livewire');
+    $controllerPath = app_path('Http/Controllers');
+
+    $livewireComponents = File::exists($livewirePath)
+        ? collect(File::allFiles($livewirePath))
+            ->map(fn($file) => $toClassName($file->getPathname()))
+            ->sort()
+            ->values()
+        : collect();
+
+    $controllers = File::exists($controllerPath)
+        ? collect(File::allFiles($controllerPath))
+            ->map(fn($file) => $toClassName($file->getPathname()))
+            ->reject(fn($class) => $class === 'App\\Http\\Controllers\\Controller')
+            ->sort()
+            ->values()
+        : collect();
+
+    $missingLivewire = $livewireComponents->filter(fn($class) => !class_exists($class))->values();
+    $missingControllers = $controllers->filter(fn($class) => !class_exists($class))->values();
+
+    $failed = false;
+
+    if ($livewireComponents->isEmpty()) {
+        $this->error('No Livewire components found.');
+        $failed = true;
+    }
+
+    if ($controllers->isEmpty()) {
+        $this->error('No HTTP controllers found.');
+        $failed = true;
+    }
+
+    if ($missingLivewire->isNotEmpty()) {
+        $this->error('Missing Livewire classes:');
+        foreach ($missingLivewire as $class) {
+            $this->line(' - ' . $class);
+        }
+        $failed = true;
+    }
+
+    if ($missingControllers->isNotEmpty()) {
+        $this->error('Missing controller classes:');
+        foreach ($missingControllers as $class) {
+            $this->line(' - ' . $class);
+        }
+        $failed = true;
+    }
+
+    if (!$failed) {
+        $this->info('CMS check passed.');
+    }
+
+    return $failed ? 1 : 0;
+})->purpose('Validate Livewire CMS components and HTTP controllers.');
+
 // Cron Job: Kirim email followup untuk data request yang terlambat
 // Jalankan setiap hari jam 08:00
 Schedule::command('audit:send-followup')->dailyAt('08:00');

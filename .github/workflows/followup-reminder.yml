@@ -1,0 +1,72 @@
+name: Followup Reminder (Production)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * *"
+
+jobs:
+  send_followup:
+    runs-on: ubuntu-latest
+
+    env:
+      CPANEL_APP_DIR: ${{ secrets.CPANEL_APP_DIR != '' && (endsWith(secrets.CPANEL_APP_DIR, '/') && secrets.CPANEL_APP_DIR || format('{0}/', secrets.CPANEL_APP_DIR)) || format('/home/{0}/web-audit-system-/', secrets.CPANEL_FTP_USERNAME) }}
+      CPANEL_SSH_PORT: ${{ secrets.CPANEL_SSH_PORT != '' && secrets.CPANEL_SSH_PORT || 22 }}
+
+    steps:
+      - name: Normalize cPanel host
+        id: normalize_host
+        run: |
+          raw_host='${{ secrets.CPANEL_FTP_SERVER }}'
+          raw_host="${raw_host#http://}"
+          raw_host="${raw_host#https://}"
+          raw_host="${raw_host#ftp://}"
+          raw_host="${raw_host#ftps://}"
+          raw_host="${raw_host%%/*}"
+          raw_host="${raw_host%%:*}"
+
+          if [ -z "$raw_host" ]; then
+            echo "CPANEL_FTP_SERVER tidak valid. Isi dengan host/IP tanpa protocol." >&2
+            exit 1
+          fi
+
+          echo "host=$raw_host" >> "$GITHUB_OUTPUT"
+
+      - name: Run followup reminder on server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ steps.normalize_host.outputs.host }}
+          username: ${{ secrets.CPANEL_FTP_USERNAME }}
+          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          port: ${{ env.CPANEL_SSH_PORT }}
+          command_timeout: 30m
+          script: |
+            set -e
+
+            APP_DIR="${{ env.CPANEL_APP_DIR }}"
+            APP_DIR="${APP_DIR%/}"
+            PHP_BIN="/opt/cpanel/ea-php82/root/usr/bin/php"
+            if [ ! -x "$PHP_BIN" ]; then
+              PHP_BIN="$(command -v php)"
+            fi
+
+            cd "$APP_DIR"
+            "$PHP_BIN" artisan audit:send-followup
+
+      - name: Send email notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.CMS_SMTP_HOST }}
+          server_port: ${{ secrets.CMS_SMTP_PORT }}
+          username: ${{ secrets.CMS_SMTP_USERNAME }}
+          password: ${{ secrets.CMS_SMTP_PASSWORD }}
+          subject: "Followup reminder ${{ job.status }} - ${{ github.repository }}"
+          to: ${{ secrets.CMS_MAIL_TO }}
+          from: ${{ secrets.CMS_MAIL_FROM }}
+          body: |
+            Workflow: ${{ github.workflow }}
+            Status: ${{ job.status }}
+            Repo: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
