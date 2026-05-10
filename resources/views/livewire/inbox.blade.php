@@ -30,12 +30,12 @@
         </div>
     @else
         {{-- Split View Layout --}}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-0">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
 
             {{-- Email List (Left Panel) --}}
             <div class="lg:col-span-5 xl:col-span-4"
                  :class="{ 'hidden lg:block': mobileShowDetail }">
-                <div class="glass-card overflow-hidden lg:rounded-r-none lg:border-r-0">
+                <div class="glass-card overflow-hidden h-full">
                     <div class="divide-y divide-slate-100 max-h-[calc(100vh-220px)] overflow-y-auto">
                         @foreach($emails as $email)
                             <button
@@ -83,7 +83,7 @@
                  :class="{ 'hidden lg:block': !mobileShowDetail && !{{ $selectedEmail ? 'true' : 'false' }} }">
 
                 @if($selectedEmail)
-                    <div class="glass-card overflow-hidden lg:rounded-l-none">
+                    <div class="glass-card overflow-hidden h-full flex flex-col">
                         {{-- Detail Header --}}
                         <div class="px-5 py-4 border-b border-slate-100">
                             <div class="flex items-center gap-3 mb-3">
@@ -134,7 +134,7 @@
                     </div>
                 @else
                     {{-- No Email Selected State --}}
-                    <div class="glass-card lg:rounded-l-none h-full min-h-[400px] flex items-center justify-center">
+                    <div class="glass-card h-full min-h-[400px] flex items-center justify-center">
                         <div class="text-center p-8">
                             <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
                                 <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">

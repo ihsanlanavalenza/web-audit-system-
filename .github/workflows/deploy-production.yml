@@ -105,8 +105,8 @@ jobs:
 
     env:
       CPANEL_WEB_ROOT: ${{ endsWith(secrets.CPANEL_TARGET_DIR, '/') && secrets.CPANEL_TARGET_DIR || format('{0}/', secrets.CPANEL_TARGET_DIR) }}
-      CPANEL_APP_DIR: ${{ secrets.CPANEL_APP_DIR != '' && (endsWith(secrets.CPANEL_APP_DIR, '/') && secrets.CPANEL_APP_DIR || format('{0}/', secrets.CPANEL_APP_DIR)) || format('/home/{0}/web-audit-system-/', secrets.CPANEL_FTP_USERNAME) }}
-      CPANEL_SSH_PORT: ${{ secrets.CPANEL_SSH_PORT != '' && secrets.CPANEL_SSH_PORT || 22 }}
+      CPANEL_APP_DIR: ${{ format('/home/{0}/web-audit-system-/', secrets.CPANEL_FTP_USERNAME) }}
+      CPANEL_SSH_PORT: 22
 
     steps:
       - name: Download Release Artifact
@@ -201,9 +201,9 @@ jobs:
               GOOGLE_CLIENT_SECRET_VALUE='${{ secrets.GOOGLE_CLIENT_SECRET }}'
               GOOGLE_REDIRECT_URI_VALUE='${{ secrets.GOOGLE_REDIRECT_URI }}'
 
-              SUPER_ADMIN_EMAIL_VALUE='${{ secrets.SUPER_ADMIN_EMAIL }}'
-              SUPER_ADMIN_PASSWORD_VALUE='${{ secrets.SUPER_ADMIN_PASSWORD }}'
-              SUPER_ADMIN_NAME_VALUE='${{ secrets.SUPER_ADMIN_NAME }}'
+              SUPER_ADMIN_EMAIL_VALUE=''
+              SUPER_ADMIN_PASSWORD_VALUE=''
+              SUPER_ADMIN_NAME_VALUE=''
 
               if [ -n "$GOOGLE_CLIENT_ID_VALUE" ] && [ -n "$GOOGLE_CLIENT_SECRET_VALUE" ]; then
                 set_env "GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_ID_VALUE"
@@ -250,7 +250,20 @@ jobs:
                 APP_KEY_VALUE="$($PHP_BIN -r 'echo "base64:".base64_encode(random_bytes(32));')"
                 set_env "APP_KEY" "$APP_KEY_VALUE"
               fi
+
+              # Setup SMTP Configuration from GitHub Secrets
+              set_env "MAIL_MAILER" "smtp"
+              if [ -n '${{ secrets.CMS_SMTP_HOST }}' ]; then
+                set_env "MAIL_HOST" '${{ secrets.CMS_SMTP_HOST }}'
+                set_env "MAIL_PORT" '${{ secrets.CMS_SMTP_PORT }}'
+                set_env "MAIL_USERNAME" '${{ secrets.CMS_SMTP_USERNAME }}'
+                set_env "MAIL_PASSWORD" '${{ secrets.CMS_SMTP_PASSWORD }}'
+                set_env "MAIL_ENCRYPTION" "tls"
+                set_env "MAIL_FROM_ADDRESS" '${{ secrets.CMS_MAIL_FROM }}'
+                set_env "MAIL_FROM_NAME" '${APP_NAME}'
+              fi
             fi
+
 
             if [ -d "$APP_DIR/public" ]; then
               if command -v rsync >/dev/null 2>&1; then
