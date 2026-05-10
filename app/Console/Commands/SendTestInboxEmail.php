@@ -15,56 +15,20 @@ class SendTestInboxEmail extends Command
 
     public function handle(): int
     {
-        $email = $this->argument('email');
+        $email = $this->argument('email') ?: 'gunawanrobi171@gmail.com';
 
-        if ($email) {
-            $user = User::whereRaw('LOWER(email) = ?', [strtolower($email)])->first();
-            if (!$user) {
-                $this->error("User dengan email '{$email}' tidak ditemukan di database.");
-                return self::FAILURE;
-            }
-        } else {
-            $user = User::first();
-            if (!$user) {
-                $this->error('Tidak ada user di database. Jalankan seeder terlebih dahulu.');
-                return self::FAILURE;
-            }
-        }
+        $this->info("📧 Mengirim test email ke: {$email}");
 
-        $this->info("📧 Mengirim test email ke: {$user->email} ({$user->name})");
-
-        // Cari data request sample, atau buat dummy data
-        $dataRequest = DataRequest::first();
-
-        if ($dataRequest) {
-            $clientName = $dataRequest->client?->nama_client ?? 'Test Client';
-            $kapName = $dataRequest->kapProfile?->nama_kap ?? 'Test KAP';
-
-            Mail::to($user->email)->send(
-                new FollowupDataRequestMail(
-                    dataRequest: $dataRequest,
-                    clientName: $clientName,
-                    kapName: $kapName,
-                    daysOverdue: 1,
-                    followupLevel: 1,
-                )
-            );
-
-            $this->info("✅ Test email (FollowupDataRequestMail) berhasil dikirim!");
-            $this->info("   Subject: Follow-up 1 Hari - Data Audit Belum Diterima — {$dataRequest->section}");
-        } else {
-            // Fallback: kirim email sederhana jika tidak ada data request
-            Mail::raw('Ini adalah test email untuk fitur Inbox WebAudit. Jika Anda melihat pesan ini di halaman Inbox, berarti fitur sudah berfungsi dengan baik! 🎉', function ($message) use ($user) {
-                $message->to($user->email)
-                    ->subject('Test Inbox WebAudit — ' . now()->format('d M Y H:i'));
+        try {
+            Mail::raw('Ini adalah test email untuk fitur Inbox WebAudit (Bypass DB). Jika Anda menerima pesan ini, artinya konfigurasi SMTP (Gmail) Anda sudah BERHASIL! 🎉', function ($message) use ($email) {
+                $message->to($email)
+                    ->subject('Test SMTP WebAudit — ' . now()->format('d M Y H:i:s'));
             });
 
-            $this->info("✅ Test email (plain text) berhasil dikirim!");
+            $this->info("✅ Test email berhasil dikirim via SMTP!");
+        } catch (\Exception $e) {
+            $this->error("❌ Gagal mengirim email: " . $e->getMessage());
         }
-
-        $this->newLine();
-        $this->info("👉 Buka halaman Inbox di browser untuk melihat hasilnya.");
-        $this->info("   URL: " . url('/inbox'));
 
         return self::SUCCESS;
     }
