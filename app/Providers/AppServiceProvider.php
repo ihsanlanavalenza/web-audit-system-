@@ -2,9 +2,6 @@
 
 namespace App\Providers;
 
-use App\Listeners\LogSentEmail;
-use Illuminate\Mail\Events\MessageSent;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Log;
 
@@ -28,7 +25,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Log every sent email to the database (all environments)
-        Event::listen(MessageSent::class, LogSentEmail::class);
+        // Laravel 11 automatically discovers events in the app/Listeners directory,
+        // so manual registration is not needed and would cause duplicates.
 
         if (!app()->environment('production')) {
             return;
