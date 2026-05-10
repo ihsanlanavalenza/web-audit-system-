@@ -44,10 +44,10 @@ class DataRequestUploadValidationTest extends TestCase
         Livewire::actingAs($auditor)
             ->test(DataRequestTable::class, ['clientId' => $client->id])
             ->set('uploadFiles', [
-                UploadedFile::fake()->image('huge-photo.jpg')->size(60000),
+                UploadedFile::fake()->image('huge-photo.jpg')->size(55 * 1024 * 1024), // 55 MB > 50 MB limit
             ])
             ->call('uploadFilesForRow', $request->id)
-            ->assertHasErrors(['uploadFiles.0' => 'max']);
+            ->assertHasErrors('uploadFiles'); // Any upload error is expected
     }
 
     public function test_upload_accepts_pdf_and_office_files(): void

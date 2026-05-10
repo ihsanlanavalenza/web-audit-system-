@@ -72,17 +72,17 @@ class FollowupReminderCommandTest extends TestCase
             'section_no' => '1',
             'account_process' => 'Kas',
             'status' => DataRequest::STATUS_PENDING,
-            'expected_received' => now()->subDays(6)->toDateString(),
+            'expected_received' => now()->toDateString(),
             'input_file' => null,
             'followup_sent_at' => null,
         ]);
 
-        // Not yet 7 days overdue -> no email
+        // Not yet 1 day overdue (same day or future) -> no email
         $this->assertSame(0, Artisan::call('audit:send-followup'));
         Mail::assertNothingSent();
 
-        // Reach 7 days overdue -> first follow-up (once)
-        $request->update(['expected_received' => now()->subDays(7)->toDateString()]);
+        // Reach 1 day overdue -> first follow-up level 1 (once)
+        $request->update(['expected_received' => now()->subDays(1)->toDateString()]);
 
         $this->assertSame(0, Artisan::call('audit:send-followup'));
 
@@ -94,31 +94,46 @@ class FollowupReminderCommandTest extends TestCase
 
         $request->refresh();
         $this->assertNotNull($request->followup_sent_at);
-        $this->assertNotNull($request->followup_7day_sent_at);
-        $this->assertNull($request->followup_15day_sent_at);
+        $this->assertNotNull($request->followup_1day_sent_at);
+        $this->assertNull($request->followup_3day_sent_at);
+        $this->assertNull($request->followup_7day_sent_at);
 
         // Same level should not resend.
         $this->assertSame(0, Artisan::call('audit:send-followup'));
         Mail::assertSent(FollowupDataRequestMail::class, 3);
 
-        // Reach 15 days overdue -> second follow-up (once)
-        $request->update(['expected_received' => now()->subDays(15)->toDateString()]);
+        // Reach 3 days overdue -> level 3 follow-up (once)
+        $request->update(['expected_received' => now()->subDays(3)->toDateString()]);
 
         $this->assertSame(0, Artisan::call('audit:send-followup'));
         Mail::assertSent(FollowupDataRequestMail::class, 6);
-        Mail::assertSent(FollowupDataRequestMail::class, fn(FollowupDataRequestMail $mail) => $mail->followupLevel === 2);
+        Mail::assertSent(FollowupDataRequestMail::class, fn(FollowupDataRequestMail $mail) => $mail->followupLevel === 3);
 
         $request->refresh();
-        $this->assertNotNull($request->followup_15day_sent_at);
+        $this->assertNotNull($request->followup_3day_sent_at);
 
-        // Second level should not resend again.
+        // Same level should not resend.
         $this->assertSame(0, Artisan::call('audit:send-followup'));
         Mail::assertSent(FollowupDataRequestMail::class, 6);
+
+        // Reach 7 days overdue -> level 7 follow-up (once)
+        $request->update(['expected_received' => now()->subDays(7)->toDateString()]);
+
+        $this->assertSame(0, Artisan::call('audit:send-followup'));
+        Mail::assertSent(FollowupDataRequestMail::class, 9);
+        Mail::assertSent(FollowupDataRequestMail::class, fn(FollowupDataRequestMail $mail) => $mail->followupLevel === 7);
+
+        $request->refresh();
+        $this->assertNotNull($request->followup_7day_sent_at);
+
+        // Same level should not resend again.
+        $this->assertSame(0, Artisan::call('audit:send-followup'));
+        Mail::assertSent(FollowupDataRequestMail::class, 9);
 
         // Once file is uploaded, command should skip this request.
         $request->update(['input_file' => ['uploads/demo/proof.jpg']]);
         $this->assertSame(0, Artisan::call('audit:send-followup'));
-        Mail::assertSent(FollowupDataRequestMail::class, 6);
+        Mail::assertSent(FollowupDataRequestMail::class, 9);
     }
 
     public function test_followup_command_sends_only_second_level_when_schedule_recovers_after_day_15(): void
@@ -169,19 +184,21 @@ class FollowupReminderCommandTest extends TestCase
             'section_no' => '2',
             'account_process' => 'Piutang',
             'status' => DataRequest::STATUS_PENDING,
-            'expected_received' => now()->subDays(16)->toDateString(),
+            'expected_received' => now()->subDays(7)->toDateString(),
             'input_file' => null,
+            'followup_1day_sent_at' => null,
+            'followup_3day_sent_at' => null,
             'followup_7day_sent_at' => null,
-            'followup_15day_sent_at' => null,
         ]);
 
         $this->assertSame(0, Artisan::call('audit:send-followup'));
 
         Mail::assertSent(FollowupDataRequestMail::class, 2);
-        Mail::assertSent(FollowupDataRequestMail::class, fn(FollowupDataRequestMail $mail) => $mail->followupLevel === 2);
+        Mail::assertSent(FollowupDataRequestMail::class, fn(FollowupDataRequestMail $mail) => $mail->followupLevel === 7);
 
         $request->refresh();
-        $this->assertNull($request->followup_7day_sent_at);
-        $this->assertNotNull($request->followup_15day_sent_at);
+        $this->assertNull($request->followup_1day_sent_at);
+        $this->assertNull($request->followup_3day_sent_at);
+        $this->assertNotNull($request->followup_7day_sent_at);
     }
 }
