@@ -121,7 +121,7 @@
                         <div class="p-5 max-h-[calc(100vh-320px)] overflow-y-auto">
                             <div class="email-body-content bg-white rounded-xl border border-slate-100 p-5 shadow-sm">
                                 <iframe
-                                    srcdoc="{{ htmlspecialchars($selectedEmail->body, ENT_QUOTES, 'UTF-8') }}"
+                                    srcdoc="{!! e($selectedEmail->body) !!}"
                                     class="w-full border-0 rounded-lg"
                                     style="min-height: 400px;"
                                     onload="this.style.height = this.contentDocument.documentElement.scrollHeight + 'px'"
