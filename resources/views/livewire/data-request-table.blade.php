@@ -457,40 +457,55 @@
                                                     <div x-data="{ uploading: false }"
                                                         class="mt-3 pt-3 border-t border-slate-200">
                                                         <input type="file" wire:model="uploadFiles" multiple
-                                                            accept=".jpg,.jpeg,.png,.webp"
+                                                            accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
                                                             x-on:change="
                                                             const files = Array.from($event.target.files || []);
                                                             if (!files.length) return;
 
-                                                            const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-                                                            const maxPerFile = 10 * 1024 * 1024;
-                                                            const maxTotal = 50 * 1024 * 1024;
+                                                            const allowed = [
+                                                                'image/jpeg',
+                                                                'image/png',
+                                                                'image/webp',
+                                                                'application/pdf',
+                                                                'application/msword',
+                                                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                                                'application/vnd.ms-excel',
+                                                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                                                'application/vnd.ms-powerpoint',
+                                                                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                                                'application/zip',
+                                                                'application/x-zip-compressed',
+                                                                'application/x-rar-compressed',
+                                                                'application/vnd.rar',
+                                                            ];
+                                                            const maxPerFile = 50 * 1024 * 1024;
+                                                            const maxTotal = 200 * 1024 * 1024;
                                                             let totalSize = 0;
 
                                                             for (const file of files) {
                                                                 totalSize += file.size;
 
                                                                 if (!allowed.includes(file.type)) {
-                                                                    $wire.set('uploadError', `Format file '${file.name}' tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.`);
+                                                                    $wire.set('uploadError', `Format file '${file.name}' tidak didukung. Gunakan JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, ZIP, atau RAR.`);
                                                                     $event
                                                                     return;
                                                                 }
 
                                                                 if (file.size > maxPerFile) {
-                                                                    $wire.set('uploadError', `Ukuran file '${file.name}' terlalu besar. Maksimal 10MB per file.`);
+                                                                    $wire.set('uploadError', `Ukuran file '${file.name}' terlalu besar. Maksimal 50MB per file.`);
                                                                     $event
                                                                     return;
                                                                 }
                                                             }
 
                                                             if (totalSize > maxTotal) {
-                                                                $wire.set('uploadError', 'Total ukuran file melebihi 50MB. Kurangi jumlah file lalu coba lagi.');
+                                                                $wire.set('uploadError', 'Total ukuran file melebihi 200MB. Kurangi jumlah file lalu coba lagi.');
                                                                 $event
                                                             }
                                                         "
                                                             x-on:livewire-upload-start="uploading = true; $wire.set('uploadError', null)"
                                                             x-on:livewire-upload-finish="uploading = false; $wire.uploadFilesForRow({{ $req->id }})"
-                                                            x-on:livewire-upload-error="uploading = false; $wire.set('uploadError', 'Upload gagal. Pastikan format JPG/JPEG/PNG/WEBP dan ukuran maksimal 10MB per file.')"
+                                                            x-on:livewire-upload-error="uploading = false; $wire.set('uploadError', 'Upload gagal. Pastikan format JPG/JPEG/PNG/WEBP/PDF/DOC/DOCX/XLS/XLSX/PPT/PPTX/ZIP/RAR dan ukuran maksimal 50MB per file.')"
                                                             class="hidden" id="file-add-{{ $req->id }}">
                                                         <label for="file-add-{{ $req->id }}"
                                                             class="cursor-pointer inline-flex flex-wrap justify-center items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition font-medium w-full">
@@ -519,40 +534,55 @@
                                                                 diupload</span>
                                                         </div>
                                                         <input type="file" wire:model="uploadFiles" multiple
-                                                            accept=".jpg,.jpeg,.png,.webp"
+                                                            accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
                                                             x-on:change="
                                                             const files = Array.from($event.target.files || []);
                                                             if (!files.length) return;
 
-                                                            const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-                                                            const maxPerFile = 10 * 1024 * 1024;
-                                                            const maxTotal = 50 * 1024 * 1024;
+                                                            const allowed = [
+                                                                'image/jpeg',
+                                                                'image/png',
+                                                                'image/webp',
+                                                                'application/pdf',
+                                                                'application/msword',
+                                                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                                                'application/vnd.ms-excel',
+                                                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                                                'application/vnd.ms-powerpoint',
+                                                                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                                                'application/zip',
+                                                                'application/x-zip-compressed',
+                                                                'application/x-rar-compressed',
+                                                                'application/vnd.rar',
+                                                            ];
+                                                            const maxPerFile = 50 * 1024 * 1024;
+                                                            const maxTotal = 200 * 1024 * 1024;
                                                             let totalSize = 0;
 
                                                             for (const file of files) {
                                                                 totalSize += file.size;
 
                                                                 if (!allowed.includes(file.type)) {
-                                                                    $wire.set('uploadError', `Format file '${file.name}' tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.`);
+                                                                    $wire.set('uploadError', `Format file '${file.name}' tidak didukung. Gunakan JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, ZIP, atau RAR.`);
                                                                     $event
                                                                     return;
                                                                 }
 
                                                                 if (file.size > maxPerFile) {
-                                                                    $wire.set('uploadError', `Ukuran file '${file.name}' terlalu besar. Maksimal 10MB per file.`);
+                                                                    $wire.set('uploadError', `Ukuran file '${file.name}' terlalu besar. Maksimal 50MB per file.`);
                                                                     $event
                                                                     return;
                                                                 }
                                                             }
 
                                                             if (totalSize > maxTotal) {
-                                                                $wire.set('uploadError', 'Total ukuran file melebihi 50MB. Kurangi jumlah file lalu coba lagi.');
+                                                                $wire.set('uploadError', 'Total ukuran file melebihi 200MB. Kurangi jumlah file lalu coba lagi.');
                                                                 $event
                                                             }
                                                         "
                                                             x-on:livewire-upload-start="uploading = true; $wire.set('uploadError', null)"
                                                             x-on:livewire-upload-finish="uploading = false; $wire.uploadFilesForRow({{ $req->id }})"
-                                                            x-on:livewire-upload-error="uploading = false; $wire.set('uploadError', 'Upload gagal. Pastikan format JPG/JPEG/PNG/WEBP dan ukuran maksimal 10MB per file.')"
+                                                            x-on:livewire-upload-error="uploading = false; $wire.set('uploadError', 'Upload gagal. Pastikan format JPG/JPEG/PNG/WEBP/PDF/DOC/DOCX/XLS/XLSX/PPT/PPTX/ZIP/RAR dan ukuran maksimal 50MB per file.')"
                                                             class="hidden" id="file-{{ $req->id }}">
                                                         <label for="file-{{ $req->id }}"
                                                             class="cursor-pointer flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium w-full">

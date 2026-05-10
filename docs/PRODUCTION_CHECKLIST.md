@@ -35,7 +35,7 @@ Set production values in server environment:
 - `MAIL_FROM_ADDRESS=no-reply@your-domain.com`
 - `MAIL_FROM_NAME=WebAudit`
 - `QUEUE_CONNECTION=database` (or redis)
-- `UPLOAD_MAX_FILESIZE >= 10M`, `POST_MAX_SIZE >= 20M`, dan `MAX_FILE_UPLOADS >= 10` (sesuai kebutuhan multi-file)
+- `UPLOAD_MAX_FILESIZE >= 50M`, `POST_MAX_SIZE >= 200M`, dan `MAX_FILE_UPLOADS >= 10` (sesuai kebutuhan multi-file)
 
 Then run:
 

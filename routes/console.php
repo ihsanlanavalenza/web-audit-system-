@@ -60,7 +60,7 @@ Artisan::command('audit:upload-env', function () {
     $this->line('max_file_uploads: ' . ($maxFiles ?: 0));
     $this->line('upload_tmp_dir: ' . $uploadTmpDir);
 
-    $this->line('Recommended: upload_max_filesize >= 10M, post_max_size >= 50M, max_file_uploads >= 10');
+    $this->line('Recommended: upload_max_filesize >= 50M, post_max_size >= 200M, max_file_uploads >= 10');
 
     $tempDisk = config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
     $tempDirectory = config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp';

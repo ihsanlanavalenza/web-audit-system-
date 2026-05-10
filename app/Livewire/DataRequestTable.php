@@ -61,9 +61,9 @@ class DataRequestTable extends Component
     public ?string $filterDateInputTo = null;
     public string $filterInputFileState = '';
 
-    private const MAX_UPLOAD_FILE_KB = 10240;
+    private const MAX_UPLOAD_FILE_KB = 51200;
     private const MAX_UPLOAD_FILES_PER_REQUEST = 10;
-    private const MAX_UPLOAD_TOTAL_BYTES = 52428800; // 50 MB
+    private const MAX_UPLOAD_TOTAL_BYTES = 209715200; // 200 MB
 
     public function mount(?int $clientId = null)
     {
@@ -236,7 +236,7 @@ class DataRequestTable extends Component
 
         $this->validate([
             'uploadFiles' => 'required|array|min:1|max:' . self::MAX_UPLOAD_FILES_PER_REQUEST,
-            'uploadFiles.*' => 'required|file|mimes:jpg,jpeg,png,webp|max:' . self::MAX_UPLOAD_FILE_KB,
+            'uploadFiles.*' => 'required|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar|max:' . self::MAX_UPLOAD_FILE_KB,
         ], [
             'uploadFiles.required' => 'Pilih minimal satu file untuk diunggah.',
             'uploadFiles.array' => 'Format upload file tidak valid.',
@@ -244,8 +244,8 @@ class DataRequestTable extends Component
             'uploadFiles.max' => 'Maksimal ' . self::MAX_UPLOAD_FILES_PER_REQUEST . ' file per upload.',
             'uploadFiles.*.required' => 'Ada file yang tidak valid. Pilih ulang file Anda.',
             'uploadFiles.*.file' => 'File yang dipilih tidak valid.',
-            'uploadFiles.*.mimes' => 'Format file tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.',
-            'uploadFiles.*.max' => 'Ukuran file terlalu besar. Maksimal 10MB per file.',
+            'uploadFiles.*.mimes' => 'Format file tidak didukung. Gunakan JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, ZIP, atau RAR.',
+            'uploadFiles.*.max' => 'Ukuran file terlalu besar. Maksimal 50MB per file.',
         ]);
 
         $files = is_array($this->uploadFiles) ? $this->uploadFiles : [$this->uploadFiles];
@@ -263,7 +263,7 @@ class DataRequestTable extends Component
         }
 
         if ($totalSize > self::MAX_UPLOAD_TOTAL_BYTES) {
-            $this->uploadError = 'Total ukuran file melebihi 50MB. Kurangi jumlah file lalu coba lagi.';
+            $this->uploadError = 'Total ukuran file melebihi 200MB. Kurangi jumlah file lalu coba lagi.';
             session()->flash('error', $this->uploadError);
             return;
         }
@@ -447,9 +447,10 @@ class DataRequestTable extends Component
         }
 
         $allowedStatuses = array_keys(DataRequest::STATUSES);
-        $statusFilters = array_values(array_intersect($this->filterStatuses, $allowedStatuses));
+        $currentFilters = is_array($this->filterStatuses) ? $this->filterStatuses : (array) $this->filterStatuses;
+        $statusFilters = array_values(array_intersect($currentFilters, $allowedStatuses));
         if (!empty($statusFilters)) {
-            $query->whereIn('status', $statusFilters);
+            $query->whereIn('status', (array) $statusFilters);
         }
 
         if ($this->filterRequestDateFrom) {

@@ -28,7 +28,7 @@ class DataRequestUploadValidationTest extends TestCase
         Livewire::actingAs($auditor)
             ->test(DataRequestTable::class, ['clientId' => $client->id])
             ->set('uploadFiles', [
-                UploadedFile::fake()->create('evidence.pdf', 500, 'application/pdf'),
+                UploadedFile::fake()->create('malware.exe', 500, 'application/octet-stream'),
             ])
             ->call('uploadFilesForRow', $request->id)
             ->assertHasErrors(['uploadFiles.0' => 'mimes']);
@@ -44,10 +44,31 @@ class DataRequestUploadValidationTest extends TestCase
         Livewire::actingAs($auditor)
             ->test(DataRequestTable::class, ['clientId' => $client->id])
             ->set('uploadFiles', [
-                UploadedFile::fake()->image('huge-photo.jpg')->size(12000),
+                UploadedFile::fake()->image('huge-photo.jpg')->size(60000),
             ])
             ->call('uploadFilesForRow', $request->id)
             ->assertHasErrors(['uploadFiles.0' => 'max']);
+    }
+
+    public function test_upload_accepts_pdf_and_office_files(): void
+    {
+        Storage::fake('public');
+        Notification::fake();
+
+        ['auditor' => $auditor, 'client' => $client, 'request' => $request] = $this->makeUploadContext();
+
+        Livewire::actingAs($auditor)
+            ->test(DataRequestTable::class, ['clientId' => $client->id])
+            ->set('uploadFiles', [
+                UploadedFile::fake()->create('report.pdf', 1024, 'application/pdf'),
+                UploadedFile::fake()->create(
+                    'notes.docx',
+                    1024,
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                ),
+            ])
+            ->call('uploadFilesForRow', $request->id)
+            ->assertHasNoErrors();
     }
 
     public function test_upload_accepts_multiple_valid_images(): void

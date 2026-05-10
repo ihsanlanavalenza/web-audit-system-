@@ -126,8 +126,17 @@
 
 <body>
     @php
-        $isSecondFollowup = ($followupLevel ?? 1) === 2;
-        $followupLabel = $isSecondFollowup ? 'Follow-up Kedua (15 Hari)' : 'Follow-up Pertama (7 Hari)';
+        $followupDays = (int) ($followupLevel ?? 1);
+        $followupLabel = match ($followupDays) {
+            7 => 'Follow-up 7 Hari',
+            3 => 'Follow-up 3 Hari',
+            default => 'Follow-up 1 Hari',
+        };
+        $followupStage = match ($followupDays) {
+            7 => 'ketiga',
+            3 => 'kedua',
+            default => 'pertama',
+        };
     @endphp
     <div class="container">
         <div class="card">
@@ -140,13 +149,8 @@
             <div class="alert">
                 <p class="alert-title">{{ $followupLabel }} - Terlambat {{ $daysOverdue }} Hari</p>
                 <p class="alert-text">
-                    @if ($isSecondFollowup)
-                        Ini adalah pengingat kedua. Data request berikut masih belum diterima setelah melewati batas
-                        waktu. Mohon segera upload dokumen yang diminta.
-                    @else
-                        Ini adalah pengingat pertama. Data request berikut telah melewati batas waktu dan belum
-                        diterima. Mohon segera upload dokumen yang diminta.
-                    @endif
+                    Ini adalah pengingat {{ $followupStage }}. Data request berikut masih belum diterima setelah
+                    melewati batas waktu. Mohon segera upload dokumen yang diminta.
                 </p>
             </div>
 

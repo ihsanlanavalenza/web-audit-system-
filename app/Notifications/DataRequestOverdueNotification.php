@@ -44,9 +44,11 @@ class DataRequestOverdueNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
-        $followupLabel = $this->followupLevel === 2
-            ? 'Follow-up Kedua (15 Hari)'
-            : 'Follow-up Pertama (7 Hari)';
+        $followupLabel = match ($this->followupLevel) {
+            7 => 'Follow-up 7 Hari',
+            3 => 'Follow-up 3 Hari',
+            default => 'Follow-up 1 Hari',
+        };
 
         return [
             'data_request_id' => $this->dataRequest->id,

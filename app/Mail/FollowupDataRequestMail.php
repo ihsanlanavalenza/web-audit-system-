@@ -23,7 +23,11 @@ class FollowupDataRequestMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $levelLabel = $this->followupLevel === 2 ? 'Follow-up Kedua (15 Hari)' : 'Follow-up Pertama (7 Hari)';
+        $levelLabel = match ($this->followupLevel) {
+            7 => 'Follow-up 7 Hari',
+            3 => 'Follow-up 3 Hari',
+            default => 'Follow-up 1 Hari',
+        };
 
         return new Envelope(
             subject: $levelLabel . ' - Data Audit Belum Diterima — ' . $this->dataRequest->section,

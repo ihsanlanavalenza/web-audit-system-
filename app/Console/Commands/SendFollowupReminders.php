@@ -14,11 +14,12 @@ use Illuminate\Support\Facades\Notification;
 
 class SendFollowupReminders extends Command
 {
-    private const LEVEL_FIRST = 1;
-    private const LEVEL_SECOND = 2;
+    private const LEVEL_DAY_1 = 1;
+    private const LEVEL_DAY_3 = 3;
+    private const LEVEL_DAY_7 = 7;
 
     protected $signature = 'audit:send-followup';
-    protected $description = 'Kirim email follow-up milestone (7 hari dan 15 hari) ke auditi & auditor';
+    protected $description = 'Kirim email follow-up milestone (1, 3, dan 7 hari) ke auditi & auditor';
 
     public function handle(): int
     {
@@ -137,12 +138,16 @@ class SendFollowupReminders extends Command
                     'followup_sent_at' => now(),
                 ];
 
-                if ($followupLevel === self::LEVEL_FIRST) {
-                    $payload['followup_7day_sent_at'] = now();
+                if ($followupLevel === self::LEVEL_DAY_1) {
+                    $payload['followup_1day_sent_at'] = now();
                 }
 
-                if ($followupLevel === self::LEVEL_SECOND) {
-                    $payload['followup_15day_sent_at'] = now();
+                if ($followupLevel === self::LEVEL_DAY_3) {
+                    $payload['followup_3day_sent_at'] = now();
+                }
+
+                if ($followupLevel === self::LEVEL_DAY_7) {
+                    $payload['followup_7day_sent_at'] = now();
                 }
 
                 $request->update($payload);
@@ -155,14 +160,20 @@ class SendFollowupReminders extends Command
 
     private function resolveFollowupLevel(DataRequest $request, int $daysOverdue): ?int
     {
-        // If job runs late and request already >=15 days overdue,
+        // If job runs late and request already >=7 days overdue,
         // send only the highest pending milestone to avoid duplicate reminders in one day.
-        if ($daysOverdue >= 15) {
-            return $request->followup_15day_sent_at ? null : self::LEVEL_SECOND;
+        if ($daysOverdue >= 7) {
+            return ($request->followup_7day_sent_at || $request->followup_15day_sent_at)
+                ? null
+                : self::LEVEL_DAY_7;
         }
 
-        if ($daysOverdue >= 7) {
-            return $request->followup_7day_sent_at ? null : self::LEVEL_FIRST;
+        if ($daysOverdue >= 3) {
+            return $request->followup_3day_sent_at ? null : self::LEVEL_DAY_3;
+        }
+
+        if ($daysOverdue >= 1) {
+            return $request->followup_1day_sent_at ? null : self::LEVEL_DAY_1;
         }
 
         return null;
