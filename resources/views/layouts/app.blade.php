@@ -174,6 +174,26 @@
                             Schedule
                         </a>
                     @endif
+
+                    {{-- Inbox (All Users) --}}
+                    @php
+                        $inboxUnreadCount = \App\Models\EmailLog::where('user_id', auth()->id())->whereNull('read_at')->count();
+                    @endphp
+                    <a href="{{ route('inbox.index') }}"
+                        class="sidebar-link {{ request()->routeIs('inbox.*') ? 'active' : '' }}"
+                        @click="sidebarOpen = false">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M21.75 9v.906a2.25 2.25 0 01-1.183 1.981l-6.478 3.488M2.25 9v.906a2.25 2.25 0 001.183 1.981l6.478 3.488m8.839 2.51l-4.66-2.51m0 0l-1.023-.55a2.25 2.25 0 00-2.134 0l-1.022.55m0 0l-4.661 2.51m16.5 1.615a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V8.844a2.25 2.25 0 011.183-1.981l7.5-4.039a2.25 2.25 0 012.134 0l7.5 4.039a2.25 2.25 0 011.183 1.98V19.5z" />
+                        </svg>
+                        <span class="flex-1">Inbox</span>
+                        @if($inboxUnreadCount > 0)
+                            <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold bg-blue-500 text-white shadow-sm shadow-blue-200">
+                                {{ $inboxUnreadCount > 99 ? '99+' : $inboxUnreadCount }}
+                            </span>
+                        @endif
+                    </a>
                 </nav>
 
                 {{-- User Info --}}

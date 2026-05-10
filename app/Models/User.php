@@ -90,4 +90,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Invitation::class);
     }
+
+    public function emailLogs()
+    {
+        return $this->hasMany(EmailLog::class);
+    }
 }

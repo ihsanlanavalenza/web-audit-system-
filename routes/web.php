@@ -7,6 +7,7 @@ use App\Livewire\KapProfileSetup;
 use App\Livewire\ClientManager;
 use App\Livewire\InviteManager;
 use App\Livewire\DataRequestTable;
+use App\Livewire\Inbox;
 use App\Livewire\SuperAdminDashboard;
 use App\Livewire\UserManager;
 use App\Livewire\AdminKapManager;
@@ -53,6 +54,9 @@ Route::middleware('auth')->group(function () {
     // Schedule (Auditor & Auditi)
     Route::get('/schedule', DataRequestTable::class)->name('schedule.index');
     Route::get('/schedule/{clientId}', DataRequestTable::class)->name('schedule.show');
+
+    // Inbox (All authenticated users)
+    Route::get('/inbox', Inbox::class)->name('inbox.index');
 
     /*
     |----------------------------------------------------------------------
