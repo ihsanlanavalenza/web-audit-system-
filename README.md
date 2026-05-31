@@ -64,3 +64,5 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 See the production runbook in [docs/PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHECKLIST.md).
 
 For GitHub-to-server remote deployment, follow [docs/GITHUB_REMOTE_DEPLOY.md](docs/GITHUB_REMOTE_DEPLOY.md).
+
+copy right @ilv 2026
