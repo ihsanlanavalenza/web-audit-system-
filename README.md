@@ -65,4 +65,4 @@ See the production runbook in [docs/PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHE
 
 For GitHub-to-server remote deployment, follow [docs/GITHUB_REMOTE_DEPLOY.md](docs/GITHUB_REMOTE_DEPLOY.md).
 
-copy right @ilv 2026 || all done 
+copy right @ilv 2026 
