@@ -32,7 +32,7 @@
                         <rect x="24" y="17" width="6" height="13" rx="3" />
                     </svg>
                 </div>
-                <h1 class="brand-title text-2xl">WebAudit</h1>
+                <h1 class="brand-title text-2xl">KAP HF dan Rekan</h1>
                 <p class="brand-subtitle mt-2">Client Assistance Schedule</p>
             </div>
 

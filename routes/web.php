@@ -14,8 +14,11 @@ use App\Livewire\AdminKapManager;
 use App\Livewire\AdminClientManager;
 use App\Livewire\GoogleRoleSelection;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\PdfController;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,11 +27,14 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('guest')->group(function () {
+
     Route::get('/login', Login::class)->name('login');
     Route::get('/register', Register::class)->name('register');
 
-    // Rute Login Google
-    Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.login');
+    // Login Google
+    Route::get('/auth/google', [GoogleController::class, 'redirect'])
+        ->name('google.login');
+
     Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
 });
 
@@ -37,47 +43,143 @@ Route::middleware('guest')->group(function () {
 | Authenticated Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
-    Route::get('/google/role-selection', GoogleRoleSelection::class)->name('google.role-selection');
 
-    Route::get('/', Dashboard::class)->name('dashboard');
+Route::middleware('auth')->group(function () {
+
+    Route::get('/google/role-selection', GoogleRoleSelection::class)
+        ->name('google.role-selection');
+
+    Route::get('/', Dashboard::class)
+        ->name('dashboard');
+
     Route::get('/dashboard', fn() => redirect()->route('dashboard'));
 
-    // Logout
+    /*
+    |--------------------------------------------------------------------------
+    | Logout
+    |--------------------------------------------------------------------------
+    */
+
     Route::post('/logout', function () {
         Auth::logout();
         session()->invalidate();
         session()->regenerateToken();
+
         return redirect()->route('login');
     })->name('logout');
 
-    // Schedule (Auditor & Auditi)
-    Route::get('/schedule', DataRequestTable::class)->name('schedule.index');
-    Route::get('/schedule/{clientId}', DataRequestTable::class)->name('schedule.show');
+    /*
+    |--------------------------------------------------------------------------
+    | Schedule
+    |--------------------------------------------------------------------------
+    */
 
-    // Inbox (All authenticated users)
-    Route::get('/inbox', Inbox::class)->name('inbox.index');
+    Route::get('/schedule', DataRequestTable::class)
+        ->name('schedule.index');
+
+    Route::get('/schedule/{clientId}', DataRequestTable::class)
+        ->name('schedule.show');
 
     /*
-    |----------------------------------------------------------------------
-    | Auditor Only Routes
-    |----------------------------------------------------------------------
+    |--------------------------------------------------------------------------
+    | Inbox
+    |--------------------------------------------------------------------------
     */
+
+    Route::get('/inbox', Inbox::class)
+        ->name('inbox.index');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auditor Only
+    |--------------------------------------------------------------------------
+    */
+
     Route::middleware('auditor')->group(function () {
-        Route::get('/kap-profile', KapProfileSetup::class)->name('kap-profile');
-        Route::get('/clients', ClientManager::class)->name('clients.index');
-        Route::get('/invitations', InviteManager::class)->name('invitations.index');
+
+        Route::get('/kap-profile', KapProfileSetup::class)
+            ->name('kap-profile');
+
+        Route::get('/clients', ClientManager::class)
+            ->name('clients.index');
+
+        Route::get('/invitations', InviteManager::class)
+            ->name('invitations.index');
     });
 
     /*
-    |----------------------------------------------------------------------
-    | Super Admin Only Routes
-    |----------------------------------------------------------------------
+    |--------------------------------------------------------------------------
+    | Super Admin Only
+    |--------------------------------------------------------------------------
     */
-    Route::middleware('superadmin')->prefix('admin')->group(function () {
-        Route::get('/dashboard', SuperAdminDashboard::class)->name('admin.dashboard');
-        Route::get('/users', UserManager::class)->name('admin.users');
-        Route::get('/kaps', AdminKapManager::class)->name('admin.kaps');
-        Route::get('/clients', AdminClientManager::class)->name('admin.clients');
-    });
+
+    Route::middleware('superadmin')
+        ->prefix('admin')
+        ->group(function () {
+
+            Route::get('/dashboard', SuperAdminDashboard::class)
+                ->name('admin.dashboard');
+
+            Route::get('/users', UserManager::class)
+                ->name('admin.users');
+
+            Route::get('/kaps', AdminKapManager::class)
+                ->name('admin.kaps');
+
+            Route::get('/clients', AdminClientManager::class)
+                ->name('admin.clients');
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Export PDF
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/export-pdf', [PdfController::class, 'export'])
+        ->name('export.pdf');
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| API PUBLIC UNTUK GOOGLE SHEET
+|--------------------------------------------------------------------------
+| Route ini TIDAK PERLU LOGIN
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/data-requests', function () {
+
+    return response()->json(
+        DB::table('data_requests')
+            ->select(
+                'id',
+                'client_id',
+                'kap_id',
+                'account_process',
+                'description',
+                'request_date',
+                'expected_received',
+                'status',
+                'pic_id'
+            )
+            ->get()
+    );
+
+});
+
+Route::get('/users-data', function () {
+
+    return response()->json(
+        DB::table('users')
+            ->select(
+                'id',
+                'name',
+                'email',
+                'role'
+            )
+            ->get()
+    );
+
 });

@@ -15,6 +15,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DataRequestTable extends Component
 {
@@ -607,6 +608,40 @@ class DataRequestTable extends Component
 
         return response()->streamDownload($callback, $filename, $headers);
     }
+
+    public function exportPdf()
+{
+    $this->authorizeClientAccess();
+
+    $requests = $this->getQuery()
+        ->orderBy('section_code')
+        ->orderBy('section_no')
+        ->orderBy('no')
+        ->get();
+
+    $summary = [
+        'received' => $requests->where('status', 'received')->count(),
+        'pending' => $requests->where('status', 'pending')->count(),
+        'on_review' => $requests->where('status', 'on_review')->count(),
+        'partially_received' => $requests->where('status', 'partially_received')->count(),
+        'not_applicable' => $requests->where('status', 'not_applicable')->count(),
+    ];
+
+    $pdf = Pdf::loadView(
+        'pdf.data-request-report',
+        [
+            'dataRequests' => $requests,
+            'summary' => $summary
+        ]
+    );
+
+    $pdf->setPaper('a4', 'landscape');
+
+    return response()->streamDownload(
+        fn() => print($pdf->output()),
+        'data-request-report-' . date('YmdHis') . '.pdf'
+    );
+}
 
     #[Layout('layouts.app')]
     public function render()
